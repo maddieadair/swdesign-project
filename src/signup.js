@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ReactComponent as SignupImg } from "./Enter-Password-2--Streamline-Brooklyn.svg";
+import { ReactComponent as SignupImg } from "./assets/Enter-Password-2--Streamline-Brooklyn.svg";
 import { FaLongArrowAltRight } from "react-icons/fa";
 
 export default function Signup() {

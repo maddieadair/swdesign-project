@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ReactComponent as ProfileSignUp } from "./Enter-Password-4--Streamline-Brooklyn.svg";
+import { ReactComponent as ProfileSignUp } from "./assets/Enter-Password-4--Streamline-Brooklyn.svg";
 import { FaCreativeCommonsPdAlt } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaUserCheck } from "react-icons/fa6";

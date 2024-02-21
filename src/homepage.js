@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Navbar from "./navbar.js";
-import { ReactComponent as ProfileImg } from "./Add-Profile-Picture-2--Streamline-Brooklyn.svg";
+import { ReactComponent as ProfileImg } from "./assets/Add-Profile-Picture-2--Streamline-Brooklyn.svg";
 
 export default function Homepage() {
   const location = useLocation();
