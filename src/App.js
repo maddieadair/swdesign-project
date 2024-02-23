@@ -6,6 +6,7 @@ import Signup from "./signup.js";
 import ProfileForm from "./profile.js";
 import Homepage from "./homepage.js";
 import Navbar from "./navbar.js";
+import FuelQuoteHistory from "./fuelQuoteHistory.js";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -19,14 +20,10 @@ function App() {
         <Route path="/profile" element={<ProfileForm />}></Route>
         <Route path="/homepage" element={<Homepage />}></Route>
         <Route path="/navbar" element={<Navbar />}></Route>
-
+        <Route path="/fuel" element={<FuelQuoteHistory/>}></Route>
       </Routes>
     </BrowserRouter>
     </div>
-    
-    // <div className="">
-    //    <Login />
-    // </div>
   );
 }
 
