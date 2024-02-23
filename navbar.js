@@ -44,9 +44,9 @@ export default function Navbar() {
         <FaWpforms />
       </Link>
       <Link
-        to="/fuelQuoteHistory"
+        to="/fuel"
         className={`hover:bg-[#88BBC8] rounded-xl p-1 ${
-          activeLink === "/fuelQuoteHistory" ? "bg-[#88BBC8]" : ""
+          activeLink === "/fuel" ? "bg-[#88BBC8]" : ""
         }`}
         onClick={() => handleLinkClick("/fuel")}
       >
