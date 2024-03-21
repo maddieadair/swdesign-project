@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Navbar from "./navbar.js";
@@ -7,7 +7,31 @@ import { BsFuelPumpFill } from "react-icons/bs";
 import { FaLocationArrow, FaUser, FaCalendar} from "react-icons/fa";
 import { IoIosPricetags } from "react-icons/io";
 
+async function fetchHistory(id, serverDomain) {
+  try {
+    const response = await fetch(`${serverDomain}/api/fuel?id=${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type' : 'application/json'
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch data");
+    }
+    const data = await response.json();
+    return data["History"];
+    return data.history;
+  }
+  catch (error) {
+    alert(error.name + " was my error ");
+    console.error("There was an error fetching the resource.", error);
+    throw error;
+  }
+}
+
 export default function FuelQuoteHistory() {
+  const [TABLE_ROWS, SET_TABLE_ROWS] = useState(null);
   const TABLE_HEAD = [
     {
      attr: "Gallons Requested",
@@ -26,57 +50,22 @@ export default function FuelQuoteHistory() {
     },
     { attr: "Total Amount",
       icon: <IoIosPricetags/>}];
-  const TABLE_ROWS = [
-    {
-        gallons: 100,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    },
-    {
-        gallons: 90,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    },
-    {
-        gallons: 80,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    },
-    {
-        gallons: 70,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    },
-    {
-        gallons: 60,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    },
-    {
-        gallons: 50,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    },
-    {
-        gallons: 40,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-    }
-  ];
+  useEffect(() => {
+      const fetchHistoryData = async () => {
+        try {
+          const id = "0"
+          const serverDomain = "http://localhost:3001"
+          const historyData = await fetchHistory(id, serverDomain);
+          SET_TABLE_ROWS(historyData);
+        }
+        catch (error) {
+          console.error('Error fetching history data:', error);
+        }
+      };
+      fetchHistoryData();
+      return () => {};
+  }, []);
+
   return (
     <div>
       <Navbar/>
@@ -92,6 +81,7 @@ export default function FuelQuoteHistory() {
                         ))}
                       </tr>
                     </thead>
+                  {TABLE_ROWS && (
                     <tbody>
                       {TABLE_ROWS.map(({gallons, address, date, price, total_amt}, index) => {
                         const rowClasses = `text-4l lowercase border-y-4 border-[#153640]  font-monsterrat text-center transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640] p-4 ${index % 2 === 0 ? "bg-[#9fc0c6]" : ""}`;
@@ -114,8 +104,9 @@ export default function FuelQuoteHistory() {
                             </td>
                         </tr>
                       )
-                    })}
+                      })}
                     </tbody>
+                  )}
                 </table>
 
                 <button

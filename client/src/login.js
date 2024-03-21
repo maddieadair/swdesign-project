@@ -1,15 +1,73 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ReactComponent as CarGas } from "./assets/Car-Getting-Gas--Streamline-Milano.svg";
+//import { response } from "express";
 
-export default function Login() {
+
+async function loginUser(credentials, serverDomain) {
+  try {
+    const response = await fetch(serverDomain, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(credentials)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Failed to login:', errorData.error)
+      if (errorData.error === "Invalid credentials") {
+        // TODO Handle this.
+        alert("Invalid Credentials.");
+      }
+      else {
+        // TODO Handle this.
+        alert("Error. Check your network connection.")
+      }
+      throw new Error("Invalid credentials");
+    }
+
+    const data = await response.json();
+    // alert(JSON.stringify(data));
+
+    return data;
+  }
+  catch (error) {
+    console.error("There was an error fetching the resource.", error);
+    throw error;
+  }
+}
+
+export default function Login({ setToken }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  const navigate = useNavigate();
+
   const validate = (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setUsernameError("");
+
+
+    if (username.length === 0) {
+      setUsernameError("* Please enter your username.");
+    }
+
+    if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
+      setUsernameError("* Please enter a valid username.");
+    }
+
+    if (password.length === 0) {
+      setPasswordError("* Please enter a password");
+    }
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
     setPasswordError("");
     setUsernameError("");
@@ -25,7 +83,23 @@ export default function Login() {
     if (password.length === 0) {
       setPasswordError("* Please enter a password");
     }
-  };
+
+    if (!(usernameError === "" && passwordError === "")) {
+      return;
+    }
+    // alert("You just submitted a form!");
+    try {
+      const token = await loginUser({
+        username,
+        password
+      }, 'http://localhost:3001/api/user');
+      // alert(token);
+      navigate("/fuel");
+    }
+    catch(error) {
+      //TODO Something?
+    }
+  }
 
   return (
     <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8]">
@@ -43,7 +117,7 @@ export default function Login() {
             </h3>
           </div>
 
-          <form className="space-y-16 w-full">
+          <form className="space-y-16 w-full" onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div className="flex flex-col gap-y-2 ">
                 <input
@@ -74,8 +148,8 @@ export default function Login() {
             <div className="space-y-8">
               <button
                 className="bg-[#153640] text-[#FBFAF5] p-2 rounded-md w-full font-bold transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]"
-                type="button"
-                onClick={validate}
+                type="submit"
+                onClick={handleSubmit}
               >
                 log in
               </button>
@@ -88,10 +162,33 @@ export default function Login() {
                   Sign Up
                 </Link>
               </p>
-            </div>
+          </div>
           </form>
         </div>
       </div>
     </div>
   );
 }
+
+// async function loginUser(credentials, serverDomain) {
+//   try {
+//     const response = await fetch(serverDomain, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     body: JSON.stringify(credentials)
+//   })
+//     .then(response => {
+//       if (!response.ok) {
+//         throw new Error("Network error");
+//       }
+//       return response.json();
+//     })
+//     .then(data => {
+//       alert(data);
+//     })
+//     .catch(error => {
+//       console.error("There was an error");
+//     })
+// }

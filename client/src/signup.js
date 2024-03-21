@@ -1,7 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as SignupImg } from "./assets/Enter-Password-2--Streamline-Brooklyn.svg";
 import { FaLongArrowAltRight } from "react-icons/fa";
+
+async function signupUser(credentials, serverDomain) {
+  try {
+    const response = await fetch(serverDomain + "/api/signup", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(credentials)
+    });
+    if (!response.ok) {
+      throw new Error("Signup Failed" + response.status);
+      return false;
+    }
+    return true;
+  }
+  catch (error) {
+    console.error("Error signing up.");
+    throw error;
+    return false;
+  }
+}
 
 export default function Signup() {
   const [signupInfo, setSignupInfo] = useState({
@@ -10,6 +32,7 @@ export default function Signup() {
   });
 
   const [signupErrors, setSignupErrors] = useState({});
+  const [backendData, setBackendData] = useState([{}])
 
   const navigate = useNavigate();
 
@@ -19,6 +42,16 @@ export default function Signup() {
       [e.target.name]: e.target.value,
     }));
   };
+
+  // useEffect(() => {
+  //     fetch("/api/user").then(
+  //       response => response.json())
+  //       .then(data => {
+  //         setBackendData(data);
+  //       }).catch(error => {
+  //         console.error("There was an unspecified error.");
+  //       })
+  //   }, []);
 
   const validate = () => {
     setSignupErrors({});
@@ -36,6 +69,10 @@ export default function Signup() {
       hasErrors = true;
     }
 
+    if (backendData.some(u => u.username === signupInfo.username)) {
+      errors.username = "* That username is already registered *";
+    }
+
     if (signupInfo.password.length === 0) {
       errors.password = "* Please enter a password";
       hasErrors = true;
@@ -49,15 +86,26 @@ export default function Signup() {
     return hasErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const hasErrors = validate();
 
     if (!hasErrors) {
-      navigate("/profile", { state: signupInfo });
-    }
+      // navigate("/profile", { state: signupInfo });
+      try {
+        const success = await signupUser({username: signupInfo.username, password: signupInfo.password}, "http://localhost:3001")
+        if (success) {
+          navigate("/profile", { state: signupInfo })
+        }
+      }
+      catch (error) {
+        alert(error);
+      }
   };
+  }
+
+
 
   return (
     <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8]">
