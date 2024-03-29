@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as SignupImg } from "./assets/Enter-Password-2--Streamline-Brooklyn.svg";
 import { FaLongArrowAltRight } from "react-icons/fa";
+import Modal from "./modal.js"
 
 async function signupUser(credentials, serverDomain) {
   try {
@@ -10,19 +11,22 @@ async function signupUser(credentials, serverDomain) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(credentials)
+      body: JSON.stringify(credentials),
+      credentials: 'include'
     });
     if (!response.ok) {
-      throw new Error("Signup Failed" + response.status);
-      return false;
+      const errorData = await response.json();
+      throw new Error("Signup failed. A user with that name exists.");
+      console.log("Error")
     }
-    return true;
+    const data = await response.json();
+    return data;
   }
   catch (error) {
-    console.error("Error signing up.");
+    console.error("Signup failed! A user with that name probably exists.");
     throw error;
-    return false;
   }
+
 }
 
 export default function Signup() {
@@ -31,8 +35,11 @@ export default function Signup() {
     password: "",
   });
 
+
   const [signupErrors, setSignupErrors] = useState({});
-  const [backendData, setBackendData] = useState([{}])
+  // const [backendData, setBackendData] = useState([{}])
+  const [openModal, setOpenModal] = useState(false);
+  const [modalState, setModalState] = useState("");
 
   const navigate = useNavigate();
 
@@ -42,16 +49,6 @@ export default function Signup() {
       [e.target.name]: e.target.value,
     }));
   };
-
-  // useEffect(() => {
-  //     fetch("/api/user").then(
-  //       response => response.json())
-  //       .then(data => {
-  //         setBackendData(data);
-  //       }).catch(error => {
-  //         console.error("There was an unspecified error.");
-  //       })
-  //   }, []);
 
   const validate = () => {
     setSignupErrors({});
@@ -69,9 +66,9 @@ export default function Signup() {
       hasErrors = true;
     }
 
-    if (backendData.some(u => u.username === signupInfo.username)) {
-      errors.username = "* That username is already registered *";
-    }
+    // if (backendData.some(u => u.username === signupInfo.username)) {
+    //   errors.username = "* That username is already registered *";
+    // }
 
     if (signupInfo.password.length === 0) {
       errors.password = "* Please enter a password";
@@ -94,13 +91,14 @@ export default function Signup() {
     if (!hasErrors) {
       // navigate("/profile", { state: signupInfo });
       try {
-        const success = await signupUser({username: signupInfo.username, password: signupInfo.password}, "http://localhost:3001")
-        if (success) {
-          navigate("/profile", { state: signupInfo })
-        }
+        const token = await signupUser({username: signupInfo.username, password: signupInfo.password}, "http://localhost:3001")
+        setOpenModal(true);
+        // alert("TOKEN: " + JSON.stringify(token));
+        navigate("/profile", { state: signupInfo })
       }
       catch (error) {
-        alert(error);
+        setModalState(error.message);
+        setOpenModal(true);
       }
   };
   }
@@ -109,6 +107,9 @@ export default function Signup() {
 
   return (
     <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8]">
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <p className="font-montserrat">{modalState}</p>
+      </Modal>
       <div className="flex flex-col xl:flex-row space-y-2 xl:space-x-20 xl:space-y-0 m-12 xl:m-20">
         <SignupImg className="h-fit w-full xl:h-full xl:basis-1/2" />
 
@@ -167,59 +168,3 @@ export default function Signup() {
   );
 }
 
-//   return (
-//     // bg-gradient-to-bl from-[#749FFC] to-white
-//     <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8] gap-x-20">
-//       <div className="w-2/5">
-//         <SignupImg className="w-full h-full" />
-//       </div>
-//       <div className="w-1/3 flex flex-col justify-center items-center gap-y-12 p-16 rounded-md border-2 border-[#153640] shadow-[10px_10px_0px_0px_rgba(21,54,64)]">
-//         <div className="space-y-4 w-full">
-//           <h1 className="font-montserrat text-5xl font-bold">sign up</h1>
-//           <h3 className="text-xl">
-//             first we'll need to create a username and password.
-//           </h3>
-//         </div>
-//         <form className="space-y-16 w-full">
-//           <div className="space-y-10">
-//             <div className="flex flex-col gap-y-2 ">
-//               <input
-//                 type="username"
-//                 placeholder="username"
-//                 name="username"
-//                 value={signupInfo.username}
-//                 onChange={handleSignupChange}
-//                 className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-//               ></input>
-//               {signupErrors.username ? (
-//                 <p className="text-red-400">{signupErrors.username}</p>
-//               ) : null}
-//             </div>
-//             <div className="flex flex-col gap-y-2">
-//               <input
-//                 type="password"
-//                 placeholder="password"
-//                 name="password"
-//                 value={signupInfo.password}
-//                 onChange={handleSignupChange}
-//                 className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-//               ></input>
-//               {signupErrors.password ? (
-//                 <p className="text-red-400">{signupErrors.password}</p>
-//               ) : null}
-//             </div>
-//           </div>
-
-//           <button
-//             className="flex flex-row gap-x-2 justify-center items-center bg-[#153640] text-[#FBFAF5] p-2 rounded-md w-full font-bold transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]"
-//             type="submit"
-//             onClick={handleSubmit}
-//           >
-//             next
-//             <FaLongArrowAltRight />
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }

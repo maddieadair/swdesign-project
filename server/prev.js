@@ -1,6 +1,5 @@
 const express = require('express');
 const session = require('express-session')
-const cors = require('cors');
 
 const port = 3001
 const app = express();
@@ -8,14 +7,17 @@ const cookieParser = require('cookie-parser');
 app.set('trust proxy', 1)
 
 app.use(express.json());
-app.use(cors({credentials: true}))
+// app.use(cookieParser());
+// app.use(bodyParser.urlencoded({extended: true}));
 app.use(session({
   secret: 'C9IPUj0IEPlMV1Id',
   resave: false,
   saveUninitialized: true,
-  cookie: {maxAge: 30000 * 60},
+  cookie: {maxAge: 30000},
   secure: false
 }))
+
+
 MyUsers = [
     {
         "id": 0,
@@ -46,7 +48,7 @@ MyUsers = [
 ]
 MyFuelQuoteHistory = [
     {
-      "id": 0,
+      "id": "0",
       "History" : [
       {
           gallons: 100,
@@ -101,21 +103,25 @@ MyFuelQuoteHistory = [
     }
 ]
 
+app.get('/api/test', function(req, res) {
+  // res.json({'Test':'Test'});
+  res.redirect("/api/test2");
+})
+
 app.post('/api/user', (req, res) => {
-  const { username, password } = req.body;
+	const { username, password } = req.body;
   console.log("We've received a username and password!");
   if (username && password) {
-    // console.log(req.session);
-    // console.log(req.session.id);
-    // NOTE This is a sample implementation. No hashing is implemented.
-    const myID = MyUsers.findIndex(user => user.username === username && user.password === password);
-    if (myID != -1) {
+    console.log(req.session);
+    console.log(req.session.id);
+      // NOTE This is a sample implementation. No hashing is implemented.
+    const valid = MyUsers.find(user => user.username === username && user.password === password);
+    if (valid) {
+      req.session.authenticated = true;
       req.session.save(() => {
-        req.session.authenticated = true;
         req.session.loggedIn = true;
         req.session.user = {
-          id: MyUsers[myID].id,
-          username: MyUsers[myID].username
+          id: 0
         }
       console.log(req.session);
       res.json(req.session)
@@ -125,67 +131,68 @@ app.post('/api/user', (req, res) => {
       res.status(401).json({ error: 'Invalid credentials' })
       console.log("Invalid login:" + username + " " + password);
     }
-  }
-  else {
+  } else {
     res.status(401).json({ error: 'Invalid credentials' });
     console.log("Invalid login.");
   }
 })
 
 app.post('/api/signup', (req, res) => {
-  const { username, password } = req.body
+	const { username, password } = req.body
   console.log("We got a request!");
 
   const user = MyUsers.find(user => user.username === username);
   if (user) {
+    res.status(400).json({ error: 'User already exists.' });
     console.log("Invalid login." + username);
-    return res.status(400).json({ error: 'User already exists.' });
   }
   else if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
     res.status(400).json({ error: 'Invalid credentials' });
     console.log("Invalid credentials." + username);
   }
-  const id = MyUsers.length;
-  var newUser = {
-      id: id,
+  const newUser = {
+      id: MyUsers.length,
       username: username,
-      password: password,
+      password: password
   };
+
   MyUsers.push(newUser);
-  req.session.save(() => {
-    req.session.authenticated = true;
-    req.session.loggedIn = true;
-    req.session.user = newUser;
+  req.session.loggedIn = true;
+  req.session.user = newUser;
+  // req.session.save((err) => {
+  //   if (err) {
+  //     console.log("Error saving session: " + err);
+  //     return res.status(501).json({ error: 'Internal server error.' });
+  //   }
     console.log("Our newly made user is: ")
-    console.log(req.session);
-    console.log("-----------------------------------")
-    res.json(req.session)
-  })
-  // req.session("HELP");
-  // console.log("Our newly made user is: ")
-  // console.log(req.session)
-  // res.json(req.session);
+    console.log(req.session)
+    res.json(req.session);
+  // }
+  // )
 })
 
 app.post('/api/profile', (req, res) => {
   const {name, address} = req.body;
+  console.log("TEST");
+  console.log(name + " " + address);
   console.log(req.session);
-  // console.log("The user" + req.session.user.username + " is at loc");
+  console.log("THAT WAS OUR req.session");
+  console.log("The user" + req.session.user.username + " is at loc");
   const uid = MyUsers.findIndex(user => user.username === req.session.user.username);
   if (uid === -1) {
     return res.status(404).json({ error: 'Something went wrong.' })
   }
   MyUsers[uid].name = name;
-  MyUsers[uid].address = address;
-  res.json({ loggedIn: true, user: req.session.user });
+  MyUsers[userIndex].address = address.
+  res.json({message: 'Profile updated'});
 })
 
-app.get('/api/db', (req, res) => {
+app.get('/api/test3', (req, res) => {
   res.json(MyUsers);
 })
 
 app.get('/api/check-auth', (req, res) => {
-  console.log("Analyzing if this user is authenticated:");
+  console.log("Let's check if this user is authenticated: ");
   console.log(req.session);
   if (req.session.user) {
     res.json({ loggedIn: true, user: req.session.user });
@@ -196,28 +203,16 @@ app.get('/api/check-auth', (req, res) => {
 })
 
 app.get('/api/fuel', (req, res) => {
-  // if (!req.session.user) {
-  //   return res.status(405).json({ error: 'Session not available' });
-  // }
-  // else {
-  //   return res.status(200).json({ lol: 'hey' })
-  // }
-  console.log(req.session.user)
-  const id = req.session.user.id
-  var fuelQuoteHistory = MyFuelQuoteHistory.find(hist => id === hist.id)
+  const { id } = req.query
+  const fuelQuoteHistory = MyFuelQuoteHistory.find(hist => id === hist.id)
   if (!fuelQuoteHistory) {
-    console.log("ID " + id + " not found; Creating a new entry.");
-    fuelQuoteHistory = {
-      "id" : id,
-      "History" : []
-    }
-    MyFuelQuoteHistory.push(fuelQuoteHistory);
+    console.log("ID " + id + " not found");
   }
+  // console.log("ID" + id + " stuff : " + JSON.stringify(fuelQuoteHistory));
   res.json(fuelQuoteHistory);
 })
 
-app.post('/api/logout', (req, res) => {
-  console.log("Request to logout from: " + req.session)
+app.get('/api/logout', (req, res) => {
   req.session.destroy(err => {
     if (err) {
       console.error('Error destroying session: ', err);
@@ -227,13 +222,10 @@ app.post('/api/logout', (req, res) => {
   res.send("Successfully logged out.")
 })
 
-if (require.main === module) {
-  app.listen(port, () => {
-    console.log('server listening on port ' + port)
-  });
-}
+app.listen(port, () => {
+      console.log('server listening on port ' + port)
+})
 
-module.exports = app
 
 /* Signup -> Test if username and are empty */
 /* Login -> Test if username and password are empty */

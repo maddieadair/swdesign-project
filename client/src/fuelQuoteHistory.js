@@ -7,13 +7,14 @@ import { BsFuelPumpFill } from "react-icons/bs";
 import { FaLocationArrow, FaUser, FaCalendar} from "react-icons/fa";
 import { IoIosPricetags } from "react-icons/io";
 
-async function fetchHistory(id, serverDomain) {
+async function fetchHistory(serverDomain) {
   try {
-    const response = await fetch(`${serverDomain}/api/fuel?id=${id}`, {
+    const response = await fetch(`${serverDomain}/api/fuel`, {
       method: 'GET',
       headers: {
         'Content-Type' : 'application/json'
       },
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -55,7 +56,7 @@ export default function FuelQuoteHistory() {
         try {
           const id = "0"
           const serverDomain = "http://localhost:3001"
-          const historyData = await fetchHistory(id, serverDomain);
+          const historyData = await fetchHistory(serverDomain);
           SET_TABLE_ROWS(historyData);
         }
         catch (error) {

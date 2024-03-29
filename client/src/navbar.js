@@ -12,7 +12,7 @@ export default function Navbar() {
       <NavLink className="px-4" to="/profile">
         <CgProfile />
       </NavLink>
-      <NavLink className="px-4" to="/">
+      <NavLink className="px-4" to="/profile">
         <BiHome />
       </NavLink>
       <NavLink className="px-4" to="/fuelQuoteForm">

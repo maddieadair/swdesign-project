@@ -1,8 +1,29 @@
 import React, { useState } from "react";
-import { ReactComponent as ProfileSignUp } from "./assets/Enter-Password-4--Streamline-Brooklyn.svg";
-import { FaCreativeCommonsPdAlt } from "react-icons/fa";
+// import { ReactComponent as ProfileSignUp } from "./assets/Enter-Password-4--Streamline-Brooklyn.svg";
+// import { FaCreativeCommonsPdAlt } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaUserCheck } from "react-icons/fa6";
+
+async function modifyProfile(values, serverDomain) {
+  try {
+    const response = await fetch(serverDomain + "/api/profile", {
+      credentials: 'include',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(values)
+    });
+    if (!response.ok) {
+      throw new Error("I messed up." + response.status);
+    }
+    return true;
+  }
+  catch (error) {
+    console.error("I messed up.");
+    throw error;
+  }
+}
 
 export default function ProfileForm() {
   const [profileValues, setProfileValues] = useState({
@@ -90,17 +111,50 @@ export default function ProfileForm() {
     return hasErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const hasErrors = validate();
 
     if (!hasErrors) {
-      navigate("/homepage", {
-        state: { loginInfo: data, profile: profileValues },
-      });
+      try {
+        const success = await modifyProfile({
+          name: profileValues.fullName,
+          address: {
+            "state": profileValues.state,
+            "city" : profileValues.city,
+            "zipcode" : profileValues.zipcode,
+            "address1" : profileValues.address1,
+            "address2" : profileValues.address2
+          }
+        }, "http://localhost:3001")
+      if (success) {
+        navigate("/homepage", {
+          state: { loginInfo: data, profile: profileValues },
+        });
+      }
     }
-  };
+      catch(error) {alert("Error after sent modify profile: " + error);}
+    };
+  }
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const hasErrors = validate();
+
+  //   if (!hasErrors) {
+  //     // navigate("/profile", { state: signupInfo });
+  //     try {
+  //       const success = await signupUser({username: signupInfo.username, password: signupInfo.password}, "localhost:3001")
+  //       if (success) {
+  //         navigate("/profile", { state: signupInfo })
+  //       }
+  //     }
+  //     catch (error) {
+  //       alert(error);
+  //     }
+  // };
 
   return (
     <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8] overflow-auto">

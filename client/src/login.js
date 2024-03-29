@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ReactComponent as CarGas } from "./assets/Car-Getting-Gas--Streamline-Milano.svg";
+import Modal from "./modal.js"
 //import { response } from "express";
-
 
 async function loginUser(credentials, serverDomain) {
   try {
@@ -13,24 +13,14 @@ async function loginUser(credentials, serverDomain) {
       },
       body: JSON.stringify(credentials)
     });
-
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Failed to login:', errorData.error)
       if (errorData.error === "Invalid credentials") {
-        // TODO Handle this.
-        alert("Invalid Credentials.");
+        throw new Error("Invalid credentials");
       }
-      else {
-        // TODO Handle this.
-        alert("Error. Check your network connection.")
-      }
-      throw new Error("Invalid credentials");
     }
-
     const data = await response.json();
-    // alert(JSON.stringify(data));
-
     return data;
   }
   catch (error) {
@@ -42,11 +32,40 @@ async function loginUser(credentials, serverDomain) {
 export default function Login({ setToken }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [openModal, setOpenModal] = useState(false);
 
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  // const [isAuthenticated, setIsAuthenticated] = useState("");
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch("http://localhost:3001/api/check-auth", { credentials: "include" })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        else {
+          // alert("ERROR!")
+          // alert(JSON.stringify(response));
+          throw new Error("Network response failure");
+        }
+      })
+      .then((data) => {
+        if (data.loggedIn === true) {
+          // alert("You're authed!");
+          navigate("fuel");
+        }
+        else {
+          // alert("Not authed");
+          // alert(JSON.stringify(data))
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching login data: ", error);
+      });
+  }, []);
 
   const validate = (e) => {
     e.preventDefault();
@@ -92,17 +111,22 @@ export default function Login({ setToken }) {
       const token = await loginUser({
         username,
         password
-      }, 'http://localhost:3001/api/user');
-      // alert(token);
+      }, '/api/user');
+      // alert("TOKEN: " + JSON.stringify(token));
       navigate("/fuel");
     }
     catch(error) {
       //TODO Something?
+      setOpenModal(true);
+      console.log("Error" + error);
     }
   }
 
   return (
     <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8]">
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <p className="font-montserrat">Invalid login.</p>
+      </Modal>
       <div className="flex flex-col xl:flex-row space-y-2 xl:space-x-20 xl:space-y-0 m-12 xl:m-20">
         <CarGas className="h-fit w-full xl:h-full xl:basis-1/2" />
 
@@ -164,31 +188,15 @@ export default function Login({ setToken }) {
               </p>
           </div>
           </form>
+              {/* <button */}
+              {/*   className="bg-[#153640] text-[#FBFAF5] p-2 rounded-md w-full font-bold transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]" */}
+              {/*   onClick={() => setOpenModal(true)} */}
+              {/* > */}
+              {/*   modal test */}
+              {/* </button> */}
         </div>
       </div>
     </div>
   );
 }
 
-// async function loginUser(credentials, serverDomain) {
-//   try {
-//     const response = await fetch(serverDomain, {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     body: JSON.stringify(credentials)
-//   })
-//     .then(response => {
-//       if (!response.ok) {
-//         throw new Error("Network error");
-//       }
-//       return response.json();
-//     })
-//     .then(data => {
-//       alert(data);
-//     })
-//     .catch(error => {
-//       console.error("There was an error");
-//     })
-// }
