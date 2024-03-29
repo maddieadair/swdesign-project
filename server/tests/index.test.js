@@ -4,35 +4,16 @@ const app = require('../index'); // Assuming your express app file is named app.
 var session = require('supertest-session');
 // const { response } = require('express');
 
-// Mock session middleware
-// const mockSession = {
-//   user: {
-//     username: 'Jason',
-//     id: 1, // Mock user id
-//   },
-// };
-
-// app.use((req, res, next) => {
-//   req.session = mockSession;
-//   next();
-// });
-
-// var testSession = session;
-// beforeEach(function () {
-//   testSession = session(app);
-// });
-
-// var testSession = session(app, {
-//   before: function (req) {
-//     req.set('id', '1234');
-//   }
-// });
 
 let server;
 
 beforeAll(() => {
   server = app.listen(3002); // Start the server before running any tests
 });
+
+beforeEach(() => {
+  testSession = session(app);
+})
 
 afterAll((done) => {
   server.close(done); // Close the server after all tests are finished
@@ -62,9 +43,21 @@ describe('POST /api/user', () => {
 
 
 describe('GET /api/fuel', () => {
+  var authenticatedSession;
+
+  beforeEach((done) => {
+    testSession.post("/api/user")
+               .send({username: 'janedoe', password: 'john'})
+               .expect(200)
+               .end(function(err) {
+                 if (err) return done(err);
+                 authenticatedSession = testSession;
+                 return done();
+               })
+  });
+
   it('should return fuel quote history for the user', async () => {
-    const response = await request(app)
-          .get("/api/fuel")
+    const response = await authenticatedSession.get("/api/fuel")
           .expect(200)
           .expect('Content-Type', /json/)
   });
@@ -76,5 +69,58 @@ describe('GET /api/db', () => {
     const response = await request(app).get("/api/db")
                                        .expect(200)
                                        .expect('Content-Type', /json/);
+  });
+});
+
+describe('POST /api/profile', () => {
+  var authenticatedSession;
+
+  beforeEach((done) => {
+    testSession.post("/api/user")
+               .send({username: 'janedoe', password: 'john'})
+               .expect(200)
+               .end(function(err) {
+                 if (err) return done(err);
+                 authenticatedSession = testSession;
+                 return done();
+               })
+  });
+
+  it('should update if the profile is valid', async () => {
+    const response = await authenticatedSession.post("/api/profile")
+                                               .send({name: 'Jake Doe', address: { state : "Texas", city : "Houston", zipcode : "40100", address1 : "123 Sample Street", address2: "" }})
+          .expect(200)
+          .expect('Content-Type', /json/)
+  });
+
+  it('should fail to update if name or address is missing', async () => {
+  const response = await authenticatedSession.post("/api/profile")
+                                             .send({name: 'Jake Doe'})
+          .expect(400)
+          .expect('Content-Type', /json/)
+  });
+});
+
+describe('POST /api/signup', () => {
+  // var authenticatedSession;
+
+  it('should fail when user already exists', async () => {
+    const response = await request(app)
+          .post("/api/signup")
+          .send({username: 'janedoe', password: 'example'})
+          .expect(400)
+  });
+
+  it('should fail when the username is invalid', async () => {
+    const response = await request(app)
+          .post("/api/signup")
+          .send({username: '??', password: 'example'})
+          .expect(400)
+  });
+  it('should get back a new user on success', async () => {
+    const response = await request(app)
+          .post("/api/signup")
+          .send({username: 'example', password: 'example'})
+          .expect(200)
   });
 });

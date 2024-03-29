@@ -142,8 +142,8 @@ app.post('/api/signup', (req, res) => {
     return res.status(400).json({ error: 'User already exists.' });
   }
   else if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
-    res.status(400).json({ error: 'Invalid credentials' });
     console.log("Invalid credentials." + username);
+    return res.status(400).json({ error: 'Invalid credentials' });
   }
   const id = MyUsers.length;
   var newUser = {
@@ -159,7 +159,7 @@ app.post('/api/signup', (req, res) => {
     console.log("Our newly made user is: ")
     console.log(req.session);
     console.log("-----------------------------------")
-    res.json(req.session)
+    res.json(req.session.user)
   })
   // req.session("HELP");
   // console.log("Our newly made user is: ")
@@ -169,11 +169,14 @@ app.post('/api/signup', (req, res) => {
 
 app.post('/api/profile', (req, res) => {
   const {name, address} = req.body;
+  if (!name || !address) {
+    return res.status(400).json({ error: 'Name and address are required parameters.' });
+  }
   console.log(req.session);
   // console.log("The user" + req.session.user.username + " is at loc");
   const uid = MyUsers.findIndex(user => user.username === req.session.user.username);
   if (uid === -1) {
-    return res.status(404).json({ error: 'Something went wrong.' })
+    return res.status(404).json({ error: 'Could not find that user'})
   }
   MyUsers[uid].name = name;
   MyUsers[uid].address = address;
@@ -196,12 +199,6 @@ app.get('/api/check-auth', (req, res) => {
 })
 
 app.get('/api/fuel', (req, res) => {
-  // if (!req.session.user) {
-  //   return res.status(405).json({ error: 'Session not available' });
-  // }
-  // else {
-  //   return res.status(200).json({ lol: 'hey' })
-  // }
   console.log(req.session.user)
   const id = req.session.user.id
   var fuelQuoteHistory = MyFuelQuoteHistory.find(hist => id === hist.id)
