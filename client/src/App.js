@@ -7,6 +7,7 @@ import Signup from "./signup.js";
 import ProfileForm from "./profile.js";
 import Homepage from "./homepage.js";
 import Navbar from "./navbar.js";
+import Quote from "./fuelQuoteForm.js";
 import FuelQuoteHistory from "./fuelQuoteHistory.js";
 import { BrowserRouter, Routes, Route, Redirect } from "react-router-dom";
 
