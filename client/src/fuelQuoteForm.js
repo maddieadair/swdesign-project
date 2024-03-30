@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Navbar from "./navbar.js";
-import { getPrice, getTotal } from "./FuelPriceModule.js";
+import { getPrice, getTotal } from "./fuelPriceModule.js";
 
 export default function Quote() {
   const [quoteText, setQuoteText] = useState({
