@@ -38,7 +38,6 @@ export default function ProfileForm() {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
-
   const location = useLocation();
   const data = location.state;
 

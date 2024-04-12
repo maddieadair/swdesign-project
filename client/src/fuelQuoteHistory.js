@@ -54,7 +54,6 @@ export default function FuelQuoteHistory() {
   useEffect(() => {
       const fetchHistoryData = async () => {
         try {
-          const id = "0"
           const serverDomain = "http://localhost:3001"
           const historyData = await fetchHistory(serverDomain);
           SET_TABLE_ROWS(historyData);
@@ -110,11 +109,13 @@ export default function FuelQuoteHistory() {
                   )}
                 </table>
 
+            <Link to="/fuelQuoteForm" style={{"display" : "block"}}>
                 <button
                     className="bg-[#153640] text-[#FBFAF5] flex flex-row justify-center items-center gap-x-2 p-2 rounded-md w-full font-bold transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]"
                     type="submit">
                     make a quote
                 </button>
+            </Link>
             </div>
         </div>
     </div>
