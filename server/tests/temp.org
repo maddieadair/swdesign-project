@@ -1,0 +1,26 @@
+#+title: Temp
+
+#+begin_src javascript
+
+// describe('POST /api/user', () => {
+//   it('should fail if username and password are not both present', async () => {
+//     testSession.post("/api/user")
+//                .send({username: "janedoe", password: "john"})
+//                .expect(200)
+//   });
+
+//   it('should fail if there is no username or password', async () => {
+//     testSession.post("/api/user")
+//                .send({username: "janedoe"})
+//                .expect(401)
+//   });
+
+//   it('should fail if there is no matching username or password', async () => {
+//     testSession.post("/api/user")
+//                .send({username: "janedoe", password: "badpass"})
+//                .expect('Content-Type', /json/)
+//                .expect(401)
+//   });
+// });
+
+#+end_src
