@@ -195,12 +195,14 @@ app.post("/api/user", (req, res) => {
 // })
 
 app.post("/api/signup", async (req, res) => {
+    console.log("test")
   if (req.body.constructor !== Object || Object.keys(req.body).length < 2) {
     return res.sendStatus(500);
   }
   const data = req.body;
-  const Username = data.Username;
-  const Password = data.Password;
+  console.log("body", data)
+  const Username = data.username;
+  const Password = data.password;
 
   try {
     const hashedPassword = await bcrypt.hash(Password, 10);
