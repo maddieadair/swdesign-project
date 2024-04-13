@@ -195,7 +195,6 @@ app.post("/api/user", (req, res) => {
 // })
 
 app.post("/api/signup", async (req, res) => {
-    console.log("test")
   if (req.body.constructor !== Object || Object.keys(req.body).length < 2) {
     return res.sendStatus(500);
   }
@@ -233,8 +232,9 @@ app.post("/api/login", async (req, res) => {
     return res.sendStatus(500);
   }
   const data = req.body;
-  const Username = data.Username;
-  const Password = data.Password;
+  console.log("data,", data)
+  const Username = data.username;
+  const Password = data.password;
 
   const query = `SELECT * FROM user_credentials WHERE Username=?`;
 
