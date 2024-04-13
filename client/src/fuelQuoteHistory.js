@@ -9,7 +9,7 @@ import { IoIosPricetags } from "react-icons/io";
 
 async function fetchHistory(serverDomain) {
   try {
-    const response = await fetch(`${serverDomain}/api/fuel`, {
+    const response = await fetch(`${serverDomain}/api/fuel-quote`, {
       method: 'GET',
       headers: {
         'Content-Type' : 'application/json'

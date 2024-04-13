@@ -111,7 +111,7 @@ export default function Login({ setToken }) {
       const token = await loginUser({
         username,
         password
-      }, '/api/user');
+      }, '/api/login');
       // alert("TOKEN: " + JSON.stringify(token));
       navigate("/fuel");
     }
