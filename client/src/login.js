@@ -2,6 +2,7 @@ import { React, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa6";
 import { FaLock } from "react-icons/fa";
+import Modal from "./modal.js";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -10,8 +11,10 @@ export default function Login() {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const navigate = useNavigate();
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
+  const navigate = useNavigate();
 
   const validate = () => {
     setPasswordError("");
@@ -72,12 +75,14 @@ export default function Login() {
           }
         }
 
-        alert("Successfully logged in!");
+        setModalMessage("Successfully logged in!");
+        setOpenModal(true);
         setPasswordError("");
         setUsernameError("");
-        navigate("/profile")
       } catch (error) {
-        alert(error);
+        setModalMessage(error.message);
+        setOpenModal(true);
+        console.log("error", error.message);
         console.log("There was an error fetching:", error);
       }
     } else {
@@ -87,8 +92,19 @@ export default function Login() {
     }
   };
 
+  const handleClose = () => {
+    if (modalMessage === "Successfully logged in!") {
+      navigate("/profile");
+    } else {
+      setOpenModal(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-screen bg-[#fafafa] text-[#2f2f28] relative font-inter">
+      <Modal open={openModal} onClose={handleClose}>
+        <p className="font-inter">{modalMessage}</p>
+      </Modal>
       <div className="flex flex-row h-screen w-1/2 bg-white border-l border-[#e2e2e0] inset-y-0 right-0 absolute items-center">
         <div className="flex flex-col px-16 gap-y-20 w-full">
           <div className="flex flex-col text-start gap-y-6">

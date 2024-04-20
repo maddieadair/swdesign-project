@@ -9,10 +9,11 @@ import Navbar from "./navbar.js";
 import Loading from "./loading.js";
 import { getPrice, getTotal } from "./fuelPriceModule.js";
 import { CiRedo } from "react-icons/ci";
+import Modal from "./modal.js";
 
 export default function FuelQuoteForm() {
-    const [gallons, setGallons] = useState("");
-    const [date, setDate] = useState("");
+  const [gallons, setGallons] = useState("");
+  const [date, setDate] = useState("");
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,9 @@ export default function FuelQuoteForm() {
   const [history, setHistory] = useState([]);
 
   const [showQuote, setShowQuote] = useState(false);
+
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
     setTimeout(() => {
@@ -89,7 +93,7 @@ export default function FuelQuoteForm() {
   };
 
   const getQuote = () => {
-    console.log("history", history)
+    console.log("history", history);
     const suggested = getPrice(
       profile[0].State,
       gallons,
@@ -165,10 +169,16 @@ export default function FuelQuoteForm() {
         const data = await response.json();
         console.log(data);
 
-        alert("Fuel Quote successfully added!");
+
+        setModalMessage("Fuel Quote successfully added!")
+        setOpenModal(true);
+
+        // alert("Fuel Quote successfully added!");
         resetFields();
       } catch (error) {
-        alert(error);
+        setModalMessage(error.message)
+        setOpenModal(true);
+        // alert(error);
         console.log("There was an error fetching:", error);
       }
     } else {
@@ -179,22 +189,27 @@ export default function FuelQuoteForm() {
   const handleGallonChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     setGallons(value);
-  }
+  };
 
   console.log("delivery date", date);
-  console.log("delivery date type", typeof(date));
+  console.log("delivery date type", typeof date);
   console.log("delivery date length", date.length);
   console.log("gallons", gallons);
   console.log("gallons length", gallons.length);
-  console.log("gallons type", typeof(gallons));
-  console.log(parseInt(gallons))
+  console.log("gallons type", typeof gallons);
+  console.log(parseInt(gallons));
 
-
+  const handleClose = () => {
+    setOpenModal(false);
+  };
 
   return (
     <>
       {!loading ? (
         <div className="flex flex-col min-h-screen">
+          <Modal open={openModal} onClose={handleClose}>
+            <p className="font-inter">{modalMessage}</p>
+          </Modal>
           <Navbar />
           <div className="flex flex-col gap-y-16 font-inter px-16 py-24">
             <div className="text-start flex flex-col gap-y-12">
@@ -208,9 +223,7 @@ export default function FuelQuoteForm() {
             </div>
 
             <form className="flex flex-row gap-x-20" onSubmit={handleSubmit}>
-              <div
-                className="flex flex-col gap-y-12 text-start w-1/2"
-              >
+              <div className="flex flex-col gap-y-12 text-start w-1/2">
                 <div className="flex flex-col gap-y-12">
                   <div className="flex flex-col gap-y-4">
                     <h5 className="font-bold">
@@ -250,7 +263,7 @@ export default function FuelQuoteForm() {
                 </div>
                 <div className="flex flex-row gap-x-2">
                   <button
-                  type="button"
+                    type="button"
                     className="p-4 font-bold w-1/2 bg-[#953327] rounded-md text-[#fafafa] hover:bg-[#c3483c] transition-colors ease-in-out duration-500"
                     onClick={resetFields}
                   >
@@ -300,9 +313,7 @@ export default function FuelQuoteForm() {
                     </div>
                     <button
                       type="submit"
-                      disabled={
-                        gallons.length === 0 ||
-                        date.length === 0                       }
+                      disabled={gallons.length === 0 || date.length === 0}
                       className="font-bold bg-[#0b3721] rounded-md p-4 text-[#fafafa] hover:bg-[#3d7b52] transition-colors ease-in-out duration-500 disabled:bg-[#fafafa] disabled:text-slate-500 disabled:border-[#e2e2e0] disabled:border disabled:cursor-not-allowed"
                     >
                       Submit

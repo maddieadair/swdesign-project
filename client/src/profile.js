@@ -9,6 +9,7 @@ import { HiPencil } from "react-icons/hi2";
 import Navbar from "./navbar.js";
 import Loading from "./loading.js";
 import { IoMdClose } from "react-icons/io";
+import Modal from "./modal.js";
 
 export default function Profile() {
   const [profile, setProfile] = useState([]);
@@ -26,6 +27,9 @@ export default function Profile() {
     zipcode: "",
   });
 
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+
   useEffect(() => {
     setTimeout(() => {
       fetchProfile();
@@ -40,12 +44,12 @@ export default function Profile() {
   };
 
   const validate = () => {
-    console.log("PROFILE VALUES", profileValues)
+    console.log("PROFILE VALUES", profileValues);
     setErrors({});
     let errors = {};
     var hasErrors = false;
 
-    console.log(profileValues.fullName)
+    console.log(profileValues.fullName);
     if (profileValues.fullName.length === 0) {
       errors.fullName = "* Please enter a valid name.";
       hasErrors = true;
@@ -62,7 +66,7 @@ export default function Profile() {
       hasErrors = true;
     }
 
-    console.log("ADDRESS: ", profileValues.address2)
+    console.log("ADDRESS: ", profileValues.address2);
     if (profileValues.address2.length > 100) {
       errors.address2 = "* Address cannot exceed 100 characters.";
       hasErrors = true;
@@ -128,14 +132,14 @@ export default function Profile() {
         //     zipcode: data.Zipcode !== null || data.Zipdode === undefined ? data.Zipcode : "",
         //   }));
 
-          console.log("PROFILEVALUES after", profileValues)
+        console.log("PROFILEVALUES after", profileValues);
         setLoading(false);
       });
   };
 
   const handleEdit = () => {
-    console.log("IN EDIT:", profile[0].Address2)
-    console.log("in handle edit", profile[0])
+    console.log("IN EDIT:", profile[0].Address2);
+    console.log("in handle edit", profile[0]);
     setOpenEdit(true);
     setProfileValues((prevState) => ({
       ...prevState,
@@ -149,7 +153,7 @@ export default function Profile() {
   };
 
   const handleCancel = () => {
-    console.log("IN cancel:", profile[0].Address2)
+    console.log("IN cancel:", profile[0].Address2);
     setOpenEdit(false);
     setProfileValues((prevState) => ({
       ...prevState,
@@ -198,11 +202,15 @@ export default function Profile() {
         const data = await response.json();
         console.log(data);
 
-        alert("Profile successfully created!");
+        // alert("Profile successfully created!");
+        setModalMessage("Profile successfully created!");
+        setOpenModal(true);
         setErrors({});
-        window.location.reload();
+        // window.location.reload();
       } catch (error) {
-        alert(error);
+        setModalMessage(error.message);
+        setOpenModal(true);
+        // alert(error);
         console.log("There was an error fetching:", error);
       }
     } else {
@@ -246,23 +254,41 @@ export default function Profile() {
         const data = await response.json();
         console.log(data);
 
-        alert("Profile successfully updated!");
+        setModalMessage("Profile successfully updated!");
+        setOpenModal(true);
+
+        // alert("Profile successfully updated!");
         setErrors({});
-        window.location.reload();
       } catch (error) {
-        alert(error);
+        setModalMessage(error.message);
+        setOpenModal(true);
+        // alert(error);
         console.log("There was an error fetching:", error);
       }
     } else {
       console.log("Input is not valid");
     }
   };
-  console.log("profileValues", profileValues)
+  console.log("profileValues", profileValues);
+
+  const handleClose = () => {
+    if (
+      modalMessage === "Profile successfully updated!" ||
+      modalMessage === "Profile successfully created!"
+    ) {
+      window.location.reload();
+    } else {
+      setOpenModal(false);
+    }
+  };
 
   return (
     <>
       {!loading ? (
         <div className="flex flex-col min-h-screen gap-y-12">
+          <Modal open={openModal} onClose={handleClose}>
+            <p className="font-inter">{modalMessage}</p>
+          </Modal>
           <Navbar />
 
           {profile.length === 0 ? (

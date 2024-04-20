@@ -2,6 +2,7 @@ import { React, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa6";
 import { FaLock } from "react-icons/fa";
+import Modal from "./modal.js";
 
 export default function Signup() {
   const [username, setUsername] = useState("");
@@ -11,6 +12,9 @@ export default function Signup() {
   const [passwordError, setPasswordError] = useState("");
 
   const navigate = useNavigate();
+
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   const validate = () => {
     setPasswordError("");
@@ -74,14 +78,17 @@ export default function Signup() {
           }
         }
 
-        alert("Successfully signed up!");
+        // alert("Successfully signed up!");
+        setModalMessage("Successfully signed up!");
+        setOpenModal(true);
+
         setPasswordError("");
         setUsernameError("");
-        navigate("/")
       } catch (error) {
-        alert(error);
+        setModalMessage(error.message);
+        setOpenModal(true);
+        // alert(error);
         console.log("There was an error fetching:", error);
-
       }
     } else {
       console.log("usernameErrors", usernameError);
@@ -90,8 +97,19 @@ export default function Signup() {
     }
   };
 
+  const handleClose = () => {
+    if (modalMessage === "Successfully signed up!") {
+      navigate("/");
+    } else {
+      setOpenModal(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-screen bg-[#fafafa] text-[#2f2f28] relative font-inter">
+      <Modal open={openModal} onClose={handleClose}>
+        <p className="font-inter">{modalMessage}</p>
+      </Modal>
       <div className="flex flex-row h-screen w-1/2 bg-white border-l border-[#e2e2e0] inset-y-0 right-0 absolute items-center">
         <div className="flex flex-col px-16 gap-y-20 w-full">
           <div className="flex flex-col text-start gap-y-6">
@@ -102,7 +120,7 @@ export default function Signup() {
           </div>
 
           <div className="flex flex-col gap-y-16">
-          <form className="flex flex-col gap-y-12" onSubmit={signup}>
+            <form className="flex flex-col gap-y-12" onSubmit={signup}>
               <div className="flex flex-col gap-y-6 text-start">
                 <label className="flex flex-row items-center relative w-full focus-within:text-[#2f2f28] text-[#e2e2e0]">
                   <FaUser className="absolute ml-2 w-10 pointer-events-none " />

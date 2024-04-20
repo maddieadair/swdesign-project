@@ -90,7 +90,7 @@ export default function Homepage() {
           <div className="flex flex-col justify-center items-center xl:w-2/3">
             <ProfileImg className="h-fit w-1/2 xl:h-fit xl:w-full" />
             <div className="space-y-2">
-              <h1 className="font-montserrat text-4xl font-bold xl:text-5xl text-center">
+              <h1 className="font-inter text-4xl font-bold xl:text-5xl text-center">
                 {profile.name}
               </h1>
               <h3 className=" text-center text-2xl">@{profile.username}</h3>
