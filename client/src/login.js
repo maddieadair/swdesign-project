@@ -1,202 +1,151 @@
-import React, { useState, useEffect } from "react";
+import { React, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ReactComponent as CarGas } from "./assets/Car-Getting-Gas--Streamline-Milano.svg";
-import Modal from "./modal.js"
-//import { response } from "express";
+import { FaUser } from "react-icons/fa6";
+import { FaLock } from "react-icons/fa";
 
-async function loginUser(credentials, serverDomain) {
-  try {
-    const response = await fetch(serverDomain, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(credentials)
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Failed to login:', errorData.error)
-      if (errorData.error === "Invalid credentials") {
-        throw new Error("Invalid credentials");
-      }
-    }
-    const data = await response.json();
-    return data;
-  }
-  catch (error) {
-    console.error("There was an error fetching the resource.", error);
-    throw error;
-  }
-}
-
-export default function Login({ setToken }) {
+export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [openModal, setOpenModal] = useState(false);
 
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  // const [isAuthenticated, setIsAuthenticated] = useState("");
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("http://localhost:3001/api/check-auth", { credentials: "include" })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        else {
-          // alert("ERROR!")
-          // alert(JSON.stringify(response));
-          throw new Error("Network response failure");
-        }
-      })
-      .then((data) => {
-        if (data.loggedIn === true) {
-          // alert("You're authed!");
-          navigate("fuel");
-        }
-        else {
-          // alert("Not authed");
-          // alert(JSON.stringify(data))
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching login data: ", error);
-      });
-  }, []);
 
-  const validate = (e) => {
-    e.preventDefault();
+  const validate = () => {
     setPasswordError("");
     setUsernameError("");
 
+    let hasErrors = false;
 
     if (username.length === 0) {
       setUsernameError("* Please enter your username.");
+      hasErrors = true;
     }
 
     if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
       setUsernameError("* Please enter a valid username.");
+      hasErrors = true;
     }
 
     if (password.length === 0) {
       setPasswordError("* Please enter a password");
+      hasErrors = true;
+    }
+
+    return hasErrors;
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    const hasErrors = validate();
+
+    if (!hasErrors) {
+      console.log("No errors detected");
+      const userData = {
+        username: username,
+        password: password,
+      };
+
+      console.log("userData", userData);
+
+      try {
+        const response = await fetch("http://localhost:3001/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(userData),
+        });
+
+        console.log(response);
+        const data = await response.json();
+        console.log(data);
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error(data.error);
+          } else {
+            throw new Error("There was a network error!");
+          }
+        }
+
+        alert("Successfully logged in!");
+        setPasswordError("");
+        setUsernameError("");
+        navigate("/profile")
+      } catch (error) {
+        alert(error);
+        console.log("There was an error fetching:", error);
+      }
+    } else {
+      console.log("usernameErrors", usernameError);
+      console.log("passwordError", passwordError);
+      console.log("Input is not valid");
     }
   };
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    setPasswordError("");
-    setUsernameError("");
-
-    if (username.length === 0) {
-      setUsernameError("* Please enter your username.");
-    }
-
-    if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
-      setUsernameError("* Please enter a valid username.");
-    }
-
-    if (password.length === 0) {
-      setPasswordError("* Please enter a password");
-    }
-
-    if (!(usernameError === "" && passwordError === "")) {
-      return;
-    }
-    // alert("You just submitted a form!");
-    try {
-      const token = await loginUser({
-        username,
-        password
-      }, '/api/login');
-      // alert("TOKEN: " + JSON.stringify(token));
-      navigate("/fuel");
-    }
-    catch(error) {
-      //TODO Something?
-      setOpenModal(true);
-      console.log("Error" + error);
-    }
-  }
-
   return (
-    <div className="flex justify-center items-center h-screen text-[#153640] selection:bg-[#88BBC8]">
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <p className="font-montserrat">Invalid login.</p>
-      </Modal>
-      <div className="flex flex-col xl:flex-row space-y-2 xl:space-x-20 xl:space-y-0 m-12 xl:m-20">
-        <CarGas className="h-fit w-full xl:h-full xl:basis-1/2" />
-
-        <div className="xl:basis-1/2 space-y-8 xl:p-16 xl:rounded-md xl:border-2 xl:border-[#153640] xl:shadow-[10px_10px_0px_0px_rgba(21,54,64)]">
-          <div className="space-y-4">
-            <h1 className="font-montserrat text-4xl font-bold xl:text-5xl">
-              welcome back!
-            </h1>
-            <h3 className="xl:text-xl">
-              nice to see you again! please enter your login info to get
-              started.
-            </h3>
+    <div className="flex min-h-screen w-screen bg-[#fafafa] text-[#2f2f28] relative font-inter">
+      <div className="flex flex-row h-screen w-1/2 bg-white border-l border-[#e2e2e0] inset-y-0 right-0 absolute items-center">
+        <div className="flex flex-col px-16 gap-y-20 w-full">
+          <div className="flex flex-col text-start gap-y-6">
+            <h1 className="font-alegreya text-7xl font-bold">Login</h1>
+            <p className="text-xl">Welcome back! Good to see you again.</p>
           </div>
 
-          <form className="space-y-16 w-full" onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              <div className="flex flex-col gap-y-2 ">
-                <input
-                  type="username"
-                  placeholder="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-                ></input>
+          <div className="flex flex-col gap-y-16">
+            <form className="flex flex-col gap-y-12" onSubmit={handleLogin}>
+              <div className="flex flex-col gap-y-6 text-start">
+                <label className="flex flex-row items-center relative w-full focus-within:text-[#2f2f28] text-[#e2e2e0]">
+                  <FaUser className="absolute ml-2 w-10 pointer-events-none " />
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="username"
+                    class="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 pl-12 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                  />
+                </label>
                 {usernameError ? (
                   <p className="text-red-400">{usernameError}</p>
                 ) : null}
-              </div>
-              <div className="flex flex-col gap-y-2">
-                <input
-                  type="password"
-                  placeholder="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-                ></input>
+                <label class="flex flex-row items-center relative w-full focus-within:text-[#2f2f28] text-[#e2e2e0]">
+                  <FaLock className="absolute ml-2 w-10 pointer-events-none" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="password"
+                    class="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 pl-12 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                  />
+                </label>
                 {passwordError ? (
                   <p className="text-red-400">{passwordError}</p>
                 ) : null}
               </div>
-            </div>
 
-            <div className="space-y-8">
               <button
-                className="bg-[#153640] text-[#FBFAF5] p-2 rounded-md w-full font-bold transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]"
                 type="submit"
-                onClick={handleSubmit}
+                className="font-bold bg-[#0b3721] rounded-md p-4 text-[#fafafa] hover:bg-[#3d7b52] transition-colors ease-in-out duration-500"
               >
-                log in
+                Log in
               </button>
-              <p>
-                Not a member?{" "}
-                <Link
-                  to="/signup"
-                  className="text-[#153640] font-black hover:text-[#78a7b4] transition-all ease-in-out duration-500"
-                >
-                  Sign Up
-                </Link>
-              </p>
+            </form>
+            <div className="text-start flex flex-row gap-x-2">
+              <p className="font-bold">Don't have an account?</p>
+              <Link
+                to="/signup"
+                className="hover:text-[#0b3721] hover:underline hover:underline-offset-4 hover:underline-[#0b3721] transition-all ease-in-out duration-500"
+              >
+                Sign up
+              </Link>
+            </div>
           </div>
-          </form>
-              {/* <button */}
-              {/*   className="bg-[#153640] text-[#FBFAF5] p-2 rounded-md w-full font-bold transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]" */}
-              {/*   onClick={() => setOpenModal(true)} */}
-              {/* > */}
-              {/*   modal test */}
-              {/* </button> */}
         </div>
       </div>
     </div>
   );
 }
-

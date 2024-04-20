@@ -1,26 +1,53 @@
-import React from "react";
-import { MdHistory } from "react-icons/md";
-import { BiHome } from "react-icons/bi";
-import { CgProfile } from "react-icons/cg";
+import { React, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaUser } from "react-icons/fa6";
+import { FaLock } from "react-icons/fa";
+import { FaCircleUser } from "react-icons/fa6";
 import { FaWpforms } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { LuHistory } from "react-icons/lu";
 
 export default function Navbar() {
+    const navigate = useNavigate();
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+
+      try {
+        const response = await fetch("http://localhost:3001/api/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        console.log(response);
+        if (!response.ok) {
+          throw new Error("There was a network error!");
+        }
+
+        alert("Successfully logged out!");
+        navigate('/')
+      } catch (error) {
+        alert(error);
+        console.log("There was an error fetching:", error);
+      }
+  };
+
   return (
-    <div className="bg-[#061013] text-[#FBFAF5] font-montserrat font-bold text-lg flex flex-row justify-evenly py-4 xl:h-screen xl:w-fit xl:p-6 xl:flex-col xl:gap-y-12 xl:absolute">
-      <NavLink className="px-4" to="/profile">
-        <CgProfile />
-      </NavLink>
-      <NavLink className="px-4" to="/homepage">
-        <BiHome />
-      </NavLink>
-      <NavLink className="px-4" to="/fuelQuoteForm">
-        <FaWpforms />
-      </NavLink>
-      <NavLink className="px-4" to="/fuel">
-        <MdHistory />
-      </NavLink>
+    <div className="flex flex-row w-screen bg-[#fafafa] text-[#2f2f28] font-inter h-16 border-b border-[#e2e2e0] items-center justify-between py-2 px-12">
+      <button className="font-bold" onClick={handleLogout}>Log out</button>
+      <div className="flex flex-row gap-x-6 font-bold items-center">
+      <Link to="/form">
+          <p>New Fuel Quote Form</p>
+        </Link>
+        <Link to="/history">
+          <p>History</p>
+        </Link>
+        <Link to="/profile">
+          <FaCircleUser size={20} />
+        </Link>
+        {/* <FaWpforms size={20}/>
+            <LuHistory size={20}/>
+            <FaCircleUser size={20}/> */}
+      </div>
     </div>
   );
 }
