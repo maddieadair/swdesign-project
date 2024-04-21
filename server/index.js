@@ -3,108 +3,24 @@ const session = require("express-session");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const mysql = require("mysql");
+// const bodyParser = require("body-parser")
 require("dotenv").config();
 
 const port = 3001;
 const app = express();
-const cookieParser = require("cookie-parser");
 app.set("trust proxy", 1);
 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors({ credentials: true }));
+app.use(cors({ credentials: true, origin: true }));
 app.use(
   session({
     secret: "C9IPUj0IEPlMV1Id",
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 30000 * 60 },
-    secure: false,
+    cookie: { maxAge: 30000 * 60, httpOnly: false, secure: false },
   })
 );
-MyUsers = [
-  {
-    id: 0,
-    name: "John Doe",
-    username: "johndoe",
-    password: "jane",
-    address: {
-      state: "Texas",
-      city: "Houston",
-      zipcode: "40170",
-      address1: "123 Sample Street",
-      address2: "Town, USA 12345",
-    },
-  },
-  {
-    id: 1,
-    name: "Jane Doe",
-    username: "janedoe",
-    password: "john",
-    address: {
-      state: "Texas",
-      city: "Houston",
-      zipcode: "40170",
-      address1: "123 Sample Street",
-      address2: "Town, USA 12345",
-    },
-  },
-];
-MyFuelQuoteHistory = [
-  {
-    id: 0,
-    History: [
-      {
-        gallons: 100,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-      {
-        gallons: 90,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-      {
-        gallons: 80,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-      {
-        gallons: 70,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-      {
-        gallons: 60,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-      {
-        gallons: 50,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-      {
-        gallons: 40,
-        address: "123 Baker Street",
-        date: "9-14-23",
-        price: 400.0,
-        total_amt: 450.0,
-      },
-    ],
-  },
-];
 
 const connection = mysql.createPool({
   host: process.env.DB_HOST,
@@ -120,96 +36,22 @@ connection.getConnection(function (err) {
   console.log("You are now connected...");
 });
 
-// const port = process.env.PORT || 3001;
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}`);
-// });
-app.post("/api", (req, res) => {
-  res.json({ users: ["userOne", "userTwo", "userThree"] });
-});
-
-app.post("/api/user", (req, res) => {
-  const { username, password } = req.body;
-  console.log("We've received a username and password!");
-  if (username && password) {
-    // console.log(req.session);
-    // console.log(req.session.id);
-    // NOTE This is a sample implementation. No hashing is implemented.
-    const myID = MyUsers.findIndex(
-      (user) => user.username === username && user.password === password
-    );
-    if (myID != -1) {
-      req.session.save(() => {
-        req.session.authenticated = true;
-        req.session.loggedIn = true;
-        req.session.user = {
-          id: MyUsers[myID].id,
-          username: MyUsers[myID].username,
-        };
-        console.log(req.session);
-        res.json(req.session);
-      });
-    } else {
-      res.status(401).json({ error: "Invalid credentials" });
-      console.log("Invalid login:" + username + " " + password);
-    }
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
-    console.log("Invalid login.");
-  }
-});
-
-// app.post('/api/signup', (req, res) => {
-//   const { username, password } = req.body
-//   console.log("We got a request!");
-
-//   const user = MyUsers.find(user => user.username === username);
-//   if (user) {
-//     console.log("Invalid login." + username);
-//     return res.status(400).json({ error: 'User already exists.' });
-//   }
-//   else if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
-//     console.log("Invalid credentials." + username);
-//     return res.status(400).json({ error: 'Invalid credentials' });
-//   }
-//   const id = MyUsers.length;
-//   var newUser = {
-//       id: id,
-//       username: username,
-//       password: password,
-//   };
-//   MyUsers.push(newUser);
-//   req.session.save(() => {
-//     req.session.authenticated = true;
-//     req.session.loggedIn = true;
-//     req.session.user = newUser;
-//     console.log("Our newly made user is: ")
-//     console.log(req.session);
-//     console.log("-----------------------------------")
-//     res.json(req.session.user)
-//   })
-//   // req.session("HELP");
-//   // console.log("Our newly made user is: ")
-//   // console.log(req.session)
-//   // res.json(req.session);
-// })
-
 app.post("/api/signup", async (req, res) => {
   if (req.body.constructor !== Object || Object.keys(req.body).length < 2) {
-    return res.sendStatus(500);
+    return res.sendStatus(401);
   }
   const data = req.body;
-  console.log("body", data)
+  console.log("body", data);
   const Username = data.username;
   const Password = data.password;
 
   try {
     const hashedPassword = await bcrypt.hash(Password, 10);
-
     const query = `INSERT INTO user_credentials(Username, Password) VALUES(?, ?)`;
     console.log(hashedPassword);
     connection.query(query, [Username, hashedPassword], (error, result) => {
       if (error) {
+        console.log(error);
         if (error.code == "ER_DUP_ENTRY" || error.errno == 1062) {
           return res
             .status(401)
@@ -232,7 +74,7 @@ app.post("/api/login", async (req, res) => {
     return res.sendStatus(500);
   }
   const data = req.body;
-  console.log("data,", data)
+  console.log("data,", data);
   const Username = data.username;
   const Password = data.password;
 
@@ -252,17 +94,20 @@ app.post("/api/login", async (req, res) => {
               password: result[0].Password,
             };
             console.log(req.session);
+            console.log(req.sessionID);
+            // res.send(req.session.sessionID)
             return res.json(req.session);
+            // return res.status(200).send(req.session);
           });
           // return res.status(200).json({ messsage: "Login was successful!" });
         } else {
-          return res.status(401).json({ message: "Invalid credentials!" });
+          return res.status(401).json({ error: "Invalid credentials!" });
         }
       });
     } else {
       return res
         .status(401)
-        .json({ message: "An account with this username does not exist!" });
+        .json({ error: "An account with this username does not exist!" });
     }
   });
 });
@@ -272,16 +117,21 @@ app.post("/api/profile", (req, res) => {
   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
 
     if (req.body.constructor !== Object || Object.keys(req.body).length < 6) {
-        return res.sendStatus(500);
-      }
+      return res.sendStatus(400);
+    }
 
     const data = req.body;
+
+    if (data.address2 === "") {
+      data.address2 = null;
+    }
+
     const userInfo = [
       req.session.user.id,
       data.name,
@@ -307,12 +157,61 @@ app.post("/api/profile", (req, res) => {
   }
 });
 
-app.get("/api/profile", (req, res) => {
+app.put("/api/profile", (req, res) => {
   console.log("test");
   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
+  } else {
+    console.log(req.session);
+    console.log("logged in");
+
+    if (req.body.constructor !== Object || Object.keys(req.body).length < 6) {
+      return res.sendStatus(400);
+    }
+
+    const data = req.body;
+    console.log(req.body)
+    console.log("data:", data)
+
+    const name = data.name;
+    const address1 = data.address1;
+    let address2 = data.address2;
+    const city = data.city;
+    const state = data.state;
+    const zipcode = data.zipcode;
+
+    if (address2 === "") {
+      address2 = null;
+    }
+
+    const query = `UPDATE client_information SET Name=?, Address1=?, Address2=?, City=?, State=?, Zipcode=? WHERE Client_ID=?`;
+
+    connection.query(
+      query,
+      [name, address1, address2, city, state, zipcode, req.session.user.id],
+      (error, result) => {
+        if (error) {
+          console.log(error);
+          return res.status(401).json({ erorr: error });
+        } else {
+          return res
+            .status(200)
+            .json({ message: "Profile information successfully updated!" });
+        }
+      }
+    );
+  }
+});
+
+app.get("/api/profile", (req, res) => {
+  console.log("test");
+  //   console.log("session:". req.session)
+  //   console.log(req.session.loggedIn);
+  if (!req.session || !req.session.loggedIn) {
+    console.log("not logged in");
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
@@ -335,11 +234,10 @@ app.post("/api/fuel-quote", (req, res) => {
   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
-
 
     const data = req.body;
     const fuelInfo = [
@@ -356,39 +254,65 @@ app.post("/api/fuel-quote", (req, res) => {
     connection.query(query, [fuelInfo], (error, result) => {
       if (error) {
         console.log(error);
-        return res.status(500).json({ erorr: error });
+        return res.status(500).json({ error: error });
       } else {
-        return res.status(200).json({ message: "Fuel Quote info successfully added!"});
+        return res
+          .status(200)
+          .json({ message: "Fuel Quote info successfully added!" });
       }
     });
   }
 });
 
-app.get("/api/fuel-quote", (req, res) => {
+app.get("/api/check-history", (req, res) => {
     console.log("test");
     console.log(req.session.loggedIn);
     if (!req.session || !req.session.loggedIn) {
       console.log("not logged in");
-      return res.status(500).json({ message: "Not logged in" });
+      return res.status(401).json({ message: "Not logged in" });
     } else {
       console.log(req.session);
       console.log("logged in");
     
-      const query = `SELECT * from fuel_quote WHERE Client_ID=?`;
+      const query = `SELECT 1 AS hasHistory FROM fuel_quote WHERE Client_ID = (?) LIMIT 1;`;
   
       connection.query(query, req.session.user.id, (error, result) => {
         if (error) {
           console.log(error);
           return res.status(500).json({ erorr: error });
         } else {
-          return res.status(200).json(result);
+            console.log(result)
+          return res
+            .status(200)
+            .json(result);
         }
       });
     }
   });
 
-app.get("/api/db", (req, res) => {
-  res.json(MyUsers);
+app.get("/api/fuel-quote", (req, res) => {
+  console.log("test");
+  // console.log(req.session.user.id);
+  if (!req.session || !req.session.loggedIn) {
+    console.log("not logged in");
+    return res.status(401).json({ message: "Not logged in" });
+  }
+  else {
+    console.log(req.session);
+    console.log(req.session.user.id)
+    console.log("logged in");
+
+    const query = `SELECT *, DATE_FORMAT(Delivery_Date, "%M %e, %Y") AS New_Date, FORMAT(Suggested_Price, 2) AS Suggested, FORMAT(Total_Amount_Due, 2) AS Total FROM fuel_quote WHERE Client_ID=?`;
+
+    connection.query(query, req.session.user.id, (error, result) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ error: error });
+      } else {
+        return res.status(200).json(result);
+      }
+    });
+  }
 });
 
 app.get("/api/check-auth", (req, res) => {
@@ -401,30 +325,18 @@ app.get("/api/check-auth", (req, res) => {
   }
 });
 
-app.get("/api/fuel", (req, res) => {
-  console.log(req.session.user);
-  const id = req.session.user.id;
-  var fuelQuoteHistory = MyFuelQuoteHistory.find((hist) => id === hist.id);
-  if (!fuelQuoteHistory) {
-    console.log("ID " + id + " not found; Creating a new entry.");
-    fuelQuoteHistory = {
-      id: id,
-      History: [],
-    };
-    MyFuelQuoteHistory.push(fuelQuoteHistory);
-  }
-  res.json(fuelQuoteHistory);
-});
-
 app.post("/api/logout", (req, res) => {
   console.log("Request to logout from: " + req.session);
   req.session.destroy((err) => {
     if (err) {
       console.error("Error destroying session: ", err);
       res.sendStatus(500);
+    } else {
+      res.clearCookie("connect.sid", { path: "/", domain: "localhost" });
+      res.send("Successfully logged out.");
+      console.log("cookie cleared");
     }
   });
-  res.send("Successfully logged out.");
 });
 
 if (require.main === module) {

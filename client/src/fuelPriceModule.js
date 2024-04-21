@@ -1,9 +1,12 @@
 export function getPrice(location, gallons, history) {
+    console.log("location", location);
+    console.log("gallons", gallons);
+    console.log("history", history);
     const currentPrice = 1.5;
     let locFactor,
       HisFactor,
       galRequest = 0;
-    locFactor = location === "Texas" ? 0.02 : 0.04;
+    locFactor = location === "TX" ? 0.02 : 0.04;
     HisFactor = history > 0 ? 0.01 : 0;
     galRequest = gallons > 1000 ? 0.02 : 0.03;
   
@@ -15,6 +18,8 @@ export function getPrice(location, gallons, history) {
   }
   
   export function getTotal(gallons, price) {
+    console.log("GALLONS", gallons);
+    console.log("PRICE", price)
     const total = gallons * price;
     return total;
   }

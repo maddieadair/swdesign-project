@@ -1,202 +1,332 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { React, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaUser } from "react-icons/fa6";
+import { FaLock } from "react-icons/fa";
+import { FaCircleUser } from "react-icons/fa6";
+import { FaWpforms } from "react-icons/fa";
+import { LuHistory } from "react-icons/lu";
 import Navbar from "./navbar.js";
+import Loading from "./loading.js";
 import { getPrice, getTotal } from "./fuelPriceModule.js";
+import { CiRedo } from "react-icons/ci";
+import Modal from "./modal.js";
 
-export default function Quote() {
-  const [quoteText, setQuoteText] = useState({
-    Gallons: "",
-    Date: "",
-    Address: "Comes from User Profile (non-editable)",
-    PerGallon: 0,
-  });
+export default function FuelQuoteForm() {
+  const [gallons, setGallons] = useState("");
+  const [date, setDate] = useState("");
 
   const [errors, setErrors] = useState({});
-  const [temp, setTemp] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState([]);
 
-  const Quotechange = (e) => {
-    setQuoteText((prevState) => ({
-      ...quoteText,
-      [e.target.name]: e.target.value,
-    }));
+  const [suggestedPrice, setSuggestedPrice] = useState("");
+  const [totalPrice, setTotalPrice] = useState("");
+  const [history, setHistory] = useState([]);
+
+  const [showQuote, setShowQuote] = useState(false);
+
+  const [openModal, setOpenModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+
+  useEffect(() => {
+    setTimeout(() => {
+      checkHistory();
+      fetchProfile();
+    }, 1000);
+  }, []);
+
+  const fetchProfile = () => {
+    fetch("http://localhost:3001/api/profile", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        setProfile(data);
+        console.log(data);
+        setLoading(false);
+      });
+  };
+
+  const checkHistory = () => {
+    fetch("http://localhost:3001/api/check-history", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        setHistory(data);
+        console.log("history", data);
+      });
   };
 
   const validate = () => {
     setErrors({});
     let errors = {};
     var hasErrors = false;
-    console.log(temp);
-    if (quoteText.Gallons === 0) {
-      errors.Gallons = "Please enter a number.";
+
+    if (gallons.length === 0) {
+      errors.gallons = "* Please enter a gallon amount of at least 1 gallon.";
       hasErrors = true;
     }
-    if (quoteText.Date.length === 0) {
-      errors.Date = "Please select a date.";
+
+    if (date.length === 0) {
+      errors.deliveryDate = "* Please enter a valid delivery date.";
       hasErrors = true;
     }
+
     setErrors(errors);
+    console.log(errors);
+    console.log("hasErrrors:", hasErrors);
 
     return hasErrors;
   };
 
-  const handleSubmit = (e) => {
+  const getQuote = () => {
+    console.log("history", history);
+    const suggested = getPrice(
+      profile[0].State,
+      gallons,
+      history.length > 0 ? 1 : 0
+    );
+    console.log("suggested", suggested);
+    setSuggestedPrice(suggested);
+
+    const total = getTotal(gallons, suggested);
+    console.log("total", total);
+    setTotalPrice(total);
+    setShowQuote(true);
+  };
+
+  const resetFields = () => {
+    setGallons("");
+    setDate("");
+
+    setSuggestedPrice("");
+    setTotalPrice("");
+    setErrors({});
+    setShowQuote(false);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const hasErrors = validate();
-  };
 
-  const handleGetQuote = (e) => {
-    e.preventDefault();
+    const address1 = profile[0].Address1;
+    const address2 = profile[0].Address2 !== null ? profile[0].Address2 : "";
+    const city = profile[0].City;
+    const state = profile[0].State;
+    const zipcode = profile[0].Zipcode;
 
-    const suggPrice = getPrice("Texas", quoteText.Gallons, 1);
+    let address = "";
 
-    setQuoteText((prevState) => ({
-      ...prevState,
-      PerGallon: suggPrice.toFixed(3),
-    }));
-
-    setTemp(quoteText.Gallons);
-
-    const hasErrors = validate();
-  };
-
-  const calculateTotalAmountDue = () => {
-    if (quoteText.PerGallon != 0 && temp == quoteText.Gallons) {
-      const total = getTotal(quoteText.Gallons, quoteText.PerGallon);
-      return ` Total Amount Due: $${total.toFixed(2)}`;
-    } else if (temp != 0) {
-      const total = getTotal(temp, quoteText.PerGallon);
-      return ` Total Amount Due: $${total.toFixed(2)}`;
+    if (address2 === "") {
+      address = address1 + ", " + city + ", " + state + " " + zipcode;
     } else {
-      return " Total Amount Due:";
+      address =
+        address1 + ", " + address2 + ", " + city + ", " + state + " " + zipcode;
+    }
+    console.log(address);
+    if (!hasErrors) {
+      console.log("No errors detected");
+
+      const userData = {
+        gallons: gallons,
+        deliveryAddress: address,
+        deliveryDate: date,
+        suggestedPrice: suggestedPrice,
+        totalBill: totalPrice,
+      };
+
+      console.log("userData", userData);
+
+      try {
+        const response = await fetch("http://localhost:3001/api/fuel-quote", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(userData),
+        });
+
+        console.log(response);
+        if (!response.ok) {
+          throw new Error("There was a network error!");
+        }
+
+        const data = await response.json();
+        console.log(data);
+
+
+        setModalMessage("Fuel Quote successfully added!")
+        setOpenModal(true);
+
+        // alert("Fuel Quote successfully added!");
+        resetFields();
+      } catch (error) {
+        setModalMessage(error.message)
+        setOpenModal(true);
+        // alert(error);
+        console.log("There was an error fetching:", error);
+      }
+    } else {
+      console.log("Input is not valid");
     }
   };
 
+  const handleGallonChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "");
+    setGallons(value);
+  };
+
+  console.log("delivery date", date);
+  console.log("delivery date type", typeof date);
+  console.log("delivery date length", date.length);
+  console.log("gallons", gallons);
+  console.log("gallons length", gallons.length);
+  console.log("gallons type", typeof gallons);
+  console.log(parseInt(gallons));
+
+  const handleClose = () => {
+    setOpenModal(false);
+  };
+
   return (
-    <div className="flex flex-col xl:flex-row">
-      <Navbar />
-      <div className="flex flex-col justify-center items-center flex-grow h-screen xl:basis-1/2 space-y-8 xl:p-16 xl:border-2 xl:border-[#153640] xl:shadow-[10px_10px_0px_0px_rgba(21,54,64)]">
-        <div className="xl:basis-1/2 space-y-8 xl:p-16 xl:rounded-md xl:border-2 xl:border-[#153640] xl:shadow-[10px_10px_0px_0px_rgba(21,54,64)]">
-          <div className="space-y-4">
-            <h1 className="font-montserrat text-4xl font-bold xl:text-5xl">
-              Fuel Quote Form
-            </h1>
-            <h3 className="xl:text-xl">Enter your information below!</h3>
-          </div>
-          <form className="space-y-16 w-full max-w-xs xl:max-w-2xl">
-            <div className="flex xl:flex-row xl:gap-x-12 flex-col gap-y-6 xl:gap-y-0">
-              <div className="space-y-6 xl:w-full">
-                <div className="flex flex-col gap-y-2 ">
-                  <input
-                    type="number"
-                    name="Gallons"
-                    placeholder={`${
-                      temp === 0 ? "How Many Gallons?" : `${temp} Gallons`
-                    }`}
-                    value={quoteText.Gallons}
-                    onChange={Quotechange}
-                    className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-                  ></input>
-                  <div className="flex font-bold">
-                    <p> Gallons</p>
-                  </div>
-                  {errors.Gallons && (
-                    <p className="text-red-400">{errors.Gallons}</p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-y-2 ">
-                  <input
-                    type="text"
-                    name="Address"
-                    placeholder="Address"
-                    value={quoteText.Address}
-                    readOnly
-                    onChange={Quotechange}
-                    className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-                    style={{ fontStyle: "italic" }}
-                  ></input>
-                  <div className="flex font-bold">
-                    <p> Delivery Address</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-y-2 ">
-                  <div className="flex flex-row gap-x-4">
-                    <input
-                      type="number"
-                      name="PerGallon"
-                      placeholder="Get a Quote!"
-                      value={
-                        quoteText.PerGallon !== 0 ? quoteText.PerGallon : ""
-                      }
-                      readOnly
-                      onChange={Quotechange}
-                      className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8] gap-x-2 w-[100%]"
-                    ></input>
-                    <div className="flex w-full max-w-[100px] h-[30px]">
-                      <button
-                        className={`${
-                          quoteText.Gallons.length === 0 ||
-                          quoteText.Date.length === 0 ||
-                          quoteText.Gallons == temp
-                            ? "bg-[#88BBC8]"
-                            : "bg-[#153640] transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]"
-                        } text-[#FBFAF5] flex flex-row justify-center items-center gap-x-2 p-2 rounded-md w-full font-bold`}
-                        type="submit"
-                        disabled={
-                          quoteText.Date.length.length === 0 ||
-                          quoteText.Gallons === 0 ||
-                          quoteText.Gallons == temp
-                        }
-                        onClick={handleGetQuote}
-                      >
-                        Get Quote
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex font-bold">
-                    <p> $ Per Gallon</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-y-2 ">
-                  <input
-                    type="date"
-                    name="Date"
-                    placeholder=" Date"
-                    value={quoteText.Date}
-                    onChange={Quotechange}
-                    className="p-2 px-4 bg-transparent border-b-2 border-[#153640] focus:outline-[#88BBC8]"
-                  ></input>
-                  <div className="flex font-bold">
-                    <p> Date</p>
-                  </div>
-                  {errors.Date && <p className="text-red-400">{errors.Date}</p>}
-                </div>
-
-                <div className="flex font-bold">
-                  <p>{calculateTotalAmountDue()}</p>
-                </div>
-
-                <button
-                  className={`${
-                    quoteText.PerGallon === 0
-                      ? "bg-[#88BBC8]"
-                      : "bg-[#153640] transition-all ease-in-out duration-500 hover:bg-[#88BBC8] hover:text-[#153640]"
-                  } text-[#FBFAF5] flex flex-row justify-center items-center gap-x-2 p-2 rounded-md w-full font-bold`}
-                  type="submit"
-                  disabled={quoteText.PerGallon === 0}
-                  onClick={handleSubmit}
-                >
-                  Submit Quote
-                </button>
+    <>
+      {!loading ? (
+        <div className="flex flex-col min-h-screen">
+          <Modal open={openModal} onClose={handleClose}>
+            <p className="font-inter">{modalMessage}</p>
+          </Modal>
+          <Navbar />
+          <div className="flex flex-col gap-y-16 font-inter px-16 py-24">
+            <div className="text-start flex flex-col gap-y-12">
+              <h1 className="font-alegreya text-7xl font-bold">
+                Fuel Quote Form
+              </h1>
+              <div className="flex flex-col">
+                <p className="font-bold">Looking to get a new fuel quote?</p>
+                <p>Just fill out a few details to get your quote.</p>
               </div>
             </div>
-          </form>
+
+            <form className="flex flex-row gap-x-20" onSubmit={handleSubmit}>
+              <div className="flex flex-col gap-y-12 text-start w-1/2">
+                <div className="flex flex-col gap-y-12">
+                  <div className="flex flex-col gap-y-4">
+                    <h5 className="font-bold">
+                      # of Gallons <span className="text-red-400">*</span>
+                    </h5>
+                    <input
+                      type="text"
+                      name="gallons"
+                      placeholder="Gallons"
+                      value={gallons}
+                      onChange={(e) => handleGallonChange(e)}
+                      disabled={showQuote}
+                      className="text-[#2f2f28] disabled:cursor-not-allowed border bg-[#fafafa] border-[#e2e2e0] p-4 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                    />
+                    {errors.gallons ? (
+                      <p className="text-red-400">{errors.gallons}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col gap-y-4">
+                    <h5 className="font-bold">
+                      Delivery Date <span className="text-red-400">*</span>
+                    </h5>{" "}
+                    <input
+                      type="date"
+                      min={new Date().toJSON().slice(0, 10)}
+                      name="deliveryDate"
+                      placeholder="Delivery Date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      disabled={showQuote}
+                      className="text-[#2f2f28] disabled:cursor-not-allowed border bg-[#fafafa] border-[#e2e2e0] p-4 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                    />
+                    {errors.deliveryDate ? (
+                      <p className="text-red-400">{errors.deliveryDate}</p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex flex-row gap-x-2">
+                  <button
+                    type="button"
+                    className="p-4 font-bold w-1/2 bg-[#953327] rounded-md text-[#fafafa] hover:bg-[#c3483c] transition-colors ease-in-out duration-500"
+                    onClick={resetFields}
+                  >
+                    Reset Fields
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={getQuote}
+                    disabled={
+                      date.length === 0 ||
+                      isNaN(gallons) ||
+                      gallons.length === 0 ||
+                      showQuote
+                    }
+                    className="w-1/2 font-bold bg-[#0b3721] rounded-md p-4 text-[#fafafa] hover:bg-[#3d7b52] transition-colors ease-in-out duration-500 disabled:bg-[#fafafa] disabled:text-slate-500 disabled:border-[#e2e2e0] disabled:border disabled:cursor-not-allowed"
+                  >
+                    Get Quote
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-1/2 flex flex-col text-start gap-y-6">
+                <div className="border-b pb-6">
+                  <h1 className="font-bold text-lg">Delivery Address</h1>
+                  <p>{profile[0].Address1}</p>
+                  <p>{profile[0].Address2}</p>
+                  <p>
+                    {profile[0].City}, {profile[0].State} {profile[0].Zipcode}
+                  </p>
+                </div>
+                {showQuote ? (
+                  <div className="flex flex-col gap-y-8">
+                    <div className="flex flex-col gap-y-6">
+                      <div className="flex flex-row gap-x-2">
+                        <p className="font-bold">
+                          Suggested Price per Gallon:{" "}
+                        </p>
+                        <p>${suggestedPrice}</p>
+                      </div>
+                      <div className="flex flex-row gap-x-2">
+                        <p className="font-bold">Total Amount Due: </p>
+                        <p>
+                          ${(Math.round(totalPrice * 100) / 100).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={gallons.length === 0 || date.length === 0}
+                      className="font-bold bg-[#0b3721] rounded-md p-4 text-[#fafafa] hover:bg-[#3d7b52] transition-colors ease-in-out duration-500 disabled:bg-[#fafafa] disabled:text-slate-500 disabled:border-[#e2e2e0] disabled:border disabled:cursor-not-allowed"
+                    >
+                      Submit
+                    </button>{" "}
+                  </div>
+                ) : null}
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    </div>
+      ) : (
+        <Loading />
+      )}
+    </>
   );
 }
