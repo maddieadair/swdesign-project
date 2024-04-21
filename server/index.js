@@ -8,12 +8,10 @@ require("dotenv").config();
 
 const port = 3001;
 const app = express();
-const cookieParser = require("cookie-parser");
 app.set("trust proxy", 1);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-// app.use(bodyParser.json());
 app.use(cors({ credentials: true, origin: true }));
 app.use(
   session({
@@ -38,83 +36,9 @@ connection.getConnection(function (err) {
   console.log("You are now connected...");
 });
 
-// const port = process.env.PORT || 3001;
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}`);
-// });
-app.post("/api", (req, res) => {
-  res.json({ users: ["userOne", "userTwo", "userThree"] });
-});
-
-app.post("/api/user", (req, res) => {
-  const { username, password } = req.body;
-  console.log("We've received a username and password!");
-  if (username && password) {
-    // console.log(req.session);
-    // console.log(req.session.id);
-    // NOTE This is a sample implementation. No hashing is implemented.
-    const myID = MyUsers.findIndex(
-      (user) => user.username === username && user.password === password
-    );
-    if (myID != -1) {
-      req.session.save(() => {
-        req.session.authenticated = true;
-        req.session.loggedIn = true;
-        req.session.user = {
-          id: MyUsers[myID].id,
-          username: MyUsers[myID].username,
-        };
-        console.log(req.session);
-        res.json(req.session);
-      });
-    } else {
-      res.status(401).json({ error: "Invalid credentials" });
-      console.log("Invalid login:" + username + " " + password);
-    }
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
-    console.log("Invalid login.");
-  }
-});
-
-// app.post('/api/signup', (req, res) => {
-//   const { username, password } = req.body
-//   console.log("We got a request!");
-
-//   const user = MyUsers.find(user => user.username === username);
-//   if (user) {
-//     console.log("Invalid login." + username);
-//     return res.status(400).json({ error: 'User already exists.' });
-//   }
-//   else if (!/^[a-zA-Z][a-zA-Z0-9]{3,23}$/.test(username)) {
-//     console.log("Invalid credentials." + username);
-//     return res.status(400).json({ error: 'Invalid credentials' });
-//   }
-//   const id = MyUsers.length;
-//   var newUser = {
-//       id: id,
-//       username: username,
-//       password: password,
-//   };
-//   MyUsers.push(newUser);
-//   req.session.save(() => {
-//     req.session.authenticated = true;
-//     req.session.loggedIn = true;
-//     req.session.user = newUser;
-//     console.log("Our newly made user is: ")
-//     console.log(req.session);
-//     console.log("-----------------------------------")
-//     res.json(req.session.user)
-//   })
-//   // req.session("HELP");
-//   // console.log("Our newly made user is: ")
-//   // console.log(req.session)
-//   // res.json(req.session);
-// })
-
 app.post("/api/signup", async (req, res) => {
   if (req.body.constructor !== Object || Object.keys(req.body).length < 2) {
-    return res.sendStatus(500);
+    return res.sendStatus(401);
   }
   const data = req.body;
   console.log("body", data);
@@ -123,7 +47,6 @@ app.post("/api/signup", async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(Password, 10);
-
     const query = `INSERT INTO user_credentials(Username, Password) VALUES(?, ?)`;
     console.log(hashedPassword);
     connection.query(query, [Username, hashedPassword], (error, result) => {
@@ -194,13 +117,13 @@ app.post("/api/profile", (req, res) => {
   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
 
     if (req.body.constructor !== Object || Object.keys(req.body).length < 6) {
-      return res.sendStatus(500);
+      return res.sendStatus(400);
     }
 
     const data = req.body;
@@ -239,13 +162,13 @@ app.put("/api/profile", (req, res) => {
   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
 
     if (req.body.constructor !== Object || Object.keys(req.body).length < 6) {
-      return res.sendStatus(500);
+      return res.sendStatus(400);
     }
 
     const data = req.body;
@@ -271,7 +194,7 @@ app.put("/api/profile", (req, res) => {
       (error, result) => {
         if (error) {
           console.log(error);
-          return res.status(500).json({ erorr: error });
+          return res.status(401).json({ erorr: error });
         } else {
           return res
             .status(200)
@@ -288,7 +211,7 @@ app.get("/api/profile", (req, res) => {
   //   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
@@ -311,7 +234,7 @@ app.post("/api/fuel-quote", (req, res) => {
   console.log(req.session.loggedIn);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   } else {
     console.log(req.session);
     console.log("logged in");
@@ -331,7 +254,7 @@ app.post("/api/fuel-quote", (req, res) => {
     connection.query(query, [fuelInfo], (error, result) => {
       if (error) {
         console.log(error);
-        return res.status(500).json({ erorr: error });
+        return res.status(500).json({ error: error });
       } else {
         return res
           .status(200)
@@ -346,7 +269,7 @@ app.get("/api/check-history", (req, res) => {
     console.log(req.session.loggedIn);
     if (!req.session || !req.session.loggedIn) {
       console.log("not logged in");
-      return res.status(500).json({ message: "Not logged in" });
+      return res.status(401).json({ message: "Not logged in" });
     } else {
       console.log(req.session);
       console.log("logged in");
@@ -369,11 +292,12 @@ app.get("/api/check-history", (req, res) => {
 
 app.get("/api/fuel-quote", (req, res) => {
   console.log("test");
-  console.log(req.session.user.id);
+  // console.log(req.session.user.id);
   if (!req.session || !req.session.loggedIn) {
     console.log("not logged in");
-    return res.status(500).json({ message: "Not logged in" });
-  } else {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+  else {
     console.log(req.session);
     console.log(req.session.user.id)
     console.log("logged in");
@@ -383,16 +307,12 @@ app.get("/api/fuel-quote", (req, res) => {
     connection.query(query, req.session.user.id, (error, result) => {
       if (error) {
         console.log(error);
-        return res.status(500).json({ erorr: error });
+        return res.status(500).json({ error: error });
       } else {
         return res.status(200).json(result);
       }
     });
   }
-});
-
-app.get("/api/db", (req, res) => {
-  res.json(MyUsers);
 });
 
 app.get("/api/check-auth", (req, res) => {
@@ -403,21 +323,6 @@ app.get("/api/check-auth", (req, res) => {
   } else {
     res.json({ loggedIn: false });
   }
-});
-
-app.get("/api/fuel", (req, res) => {
-  console.log(req.session.user);
-  const id = req.session.user.id;
-  var fuelQuoteHistory = MyFuelQuoteHistory.find((hist) => id === hist.id);
-  if (!fuelQuoteHistory) {
-    console.log("ID " + id + " not found; Creating a new entry.");
-    fuelQuoteHistory = {
-      id: id,
-      History: [],
-    };
-    MyFuelQuoteHistory.push(fuelQuoteHistory);
-  }
-  res.json(fuelQuoteHistory);
 });
 
 app.post("/api/logout", (req, res) => {
