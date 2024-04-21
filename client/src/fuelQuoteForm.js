@@ -30,10 +30,10 @@ export default function FuelQuoteForm() {
 
   useEffect(() => {
     setTimeout(() => {
-      checkHistory();
       fetchProfile();
     }, 1000);
   }, []);
+
 
   const fetchProfile = () => {
     fetch("http://localhost:3001/api/profile", {
@@ -53,8 +53,8 @@ export default function FuelQuoteForm() {
       });
   };
 
-  const checkHistory = () => {
-    fetch("http://localhost:3001/api/check-history", {
+  const checkHistory = async () => {
+    return (fetch("http://localhost:3001/api/check-history", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -65,9 +65,13 @@ export default function FuelQuoteForm() {
         return response.json();
       })
       .then((data) => {
-        setHistory(data);
-        console.log("history", data);
-      });
+        console.log(data);
+        // setHistory(data)
+        return data;
+      }).catch((err) => {
+        console.log(err)
+      })
+    )
   };
 
   const validate = () => {
@@ -92,18 +96,19 @@ export default function FuelQuoteForm() {
     return hasErrors;
   };
 
-  const getQuote = () => {
-    console.log("history", history);
+  const getQuote = async() => {
+    let response = await checkHistory();
+
+    let hasHistory = response.length > 0 && response[0].hasHistory === 1 ? 1 : 0;
+
     const suggested = getPrice(
       profile[0].State,
       gallons,
-      history.length > 0 ? 1 : 0
+      hasHistory
     );
-    console.log("suggested", suggested);
     setSuggestedPrice(suggested);
 
     const total = getTotal(gallons, suggested);
-    console.log("total", total);
     setTotalPrice(total);
     setShowQuote(true);
   };

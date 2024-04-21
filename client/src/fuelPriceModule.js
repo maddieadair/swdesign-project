@@ -13,6 +13,14 @@ export function getPrice(location, gallons, history) {
     const margin = (locFactor - HisFactor + galRequest + 0.1) * currentPrice;
     const suggPrice = 1.5 + margin;
     const total = suggPrice * gallons;
+
+    console.log("locfactor", locFactor)
+    console.log("hisfactor", HisFactor)
+    console.log("galrequest", galRequest)
+
+    console.log("margin", margin)
+    console.log("suggprice", suggPrice)
+    console.log("total", total)
   
     return suggPrice;
   }
