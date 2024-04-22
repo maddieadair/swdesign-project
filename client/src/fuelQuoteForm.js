@@ -10,6 +10,7 @@ import Loading from "./loading.js";
 import { getPrice, getTotal } from "./fuelPriceModule.js";
 import { CiRedo } from "react-icons/ci";
 import Modal from "./modal.js";
+import { useSessionExpirationChecker } from "./sessionExpiration.js";
 
 export default function FuelQuoteForm() {
   const [gallons, setGallons] = useState("");
@@ -33,6 +34,8 @@ export default function FuelQuoteForm() {
       fetchProfile();
     }, 1000);
   }, []);
+
+  useSessionExpirationChecker(() => {}, []);
 
 
   const fetchProfile = () => {

@@ -40,6 +40,8 @@ export default function Login() {
     return hasErrors;
   };
 
+  
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -122,20 +124,20 @@ export default function Login() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="username"
-                    class="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 pl-12 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                    className="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 pl-12 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
                   />
                 </label>
                 {usernameError ? (
                   <p className="text-red-400">{usernameError}</p>
                 ) : null}
-                <label class="flex flex-row items-center relative w-full focus-within:text-[#2f2f28] text-[#e2e2e0]">
+                <label className="flex flex-row items-center relative w-full focus-within:text-[#2f2f28] text-[#e2e2e0]">
                   <FaLock className="absolute ml-2 w-10 pointer-events-none" />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="password"
-                    class="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 pl-12 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                    className="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 pl-12 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
                   />
                 </label>
                 {passwordError ? (

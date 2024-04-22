@@ -10,6 +10,7 @@ import Navbar from "./navbar.js";
 import Loading from "./loading.js";
 import { IoMdClose } from "react-icons/io";
 import Modal from "./modal.js";
+import { useSessionExpirationChecker } from "./sessionExpiration.js";
 
 export default function Profile() {
   const [profile, setProfile] = useState([]);
@@ -35,6 +36,8 @@ export default function Profile() {
       fetchProfile();
     }, 1000);
   }, []);
+
+  useSessionExpirationChecker(() => {}, []);
 
   const handleProfileChange = (e) => {
     setProfileValues((prevState) => ({

@@ -7,6 +7,8 @@ import { FaWpforms } from "react-icons/fa";
 import { LuHistory } from "react-icons/lu";
 import Navbar from "./navbar.js";
 import Loading from "./loading.js";
+import { useSessionExpirationChecker } from "./sessionExpiration.js";
+// import Modal from "./modal.js";
 
 export default function FuelQuoteHistory() {
   const [history, setHistory] = useState([]);
@@ -17,6 +19,8 @@ export default function FuelQuoteHistory() {
       fetchProfile();
     }, 1000);
   }, []);
+
+  useSessionExpirationChecker(() => {}, []);
 
   const fetchProfile = () => {
     fetch("http://localhost:3001/api/fuel-quote", {
