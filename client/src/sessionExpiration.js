@@ -43,17 +43,16 @@ export const useSessionExpirationChecker = () => {
             credentials: "include",
           });
 
-          //display modal message
-          alert("Session expired")
-          setModalMessage("Session timed out!");
-          setOpenModal(true);
+        //   //display modal message
+        //   setModalMessage("Session timed out!");
+        //   setOpenModal(true);
 
           if (!response.ok) {
             throw new Error("There was a network error!");
           }
 
           //navigate to login page
-          navigate("/");
+          navigate("/?showModal=true");
         } catch (error) {
           console.log("There was an error fetching:", error);
         }
