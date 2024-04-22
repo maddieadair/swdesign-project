@@ -37,8 +37,6 @@ export default function Profile() {
     }, 1000);
   }, []);
 
-  useSessionExpirationChecker(() => {}, []);
-
   const handleProfileChange = (e) => {
     setProfileValues((prevState) => ({
       ...profileValues,

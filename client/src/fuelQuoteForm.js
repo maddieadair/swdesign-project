@@ -35,7 +35,6 @@ export default function FuelQuoteForm() {
     }, 1000);
   }, []);
 
-  useSessionExpirationChecker(() => {}, []);
 
 
   const fetchProfile = () => {

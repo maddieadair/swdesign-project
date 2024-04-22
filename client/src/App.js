@@ -19,7 +19,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route
+          {/* <Route
             path="/"
             element={
               <ProtectedRoutes>
@@ -62,13 +62,13 @@ function App() {
                 <FuelQuoteHistory />
               </AuthenticatedRoutes>
             }
-          ></Route>
+          ></Route> */}
 
           <Route path="/" element={<Login />}></Route>
           <Route path="/signup" element={<Signup />}></Route>
-          {/* <Route path="/profile" element={<Profile />}></Route>
+          <Route path="/profile" element={<Profile />}></Route>
           <Route path="/form" element={<FuelQuoteForm />}></Route>
-          <Route path="/history" element={<FuelQuoteHistory />}></Route> */}
+          <Route path="/history" element={<FuelQuoteHistory />}></Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>
