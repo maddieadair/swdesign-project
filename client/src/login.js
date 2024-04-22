@@ -1,5 +1,5 @@
-import { React, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { React, useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaUser } from "react-icons/fa6";
 import { FaLock } from "react-icons/fa";
 import Modal from "./modal.js";
@@ -15,6 +15,20 @@ export default function Login() {
   const [modalMessage, setModalMessage] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const showModalParam = searchParams.get("showModal");
+
+  useEffect(() => {
+    if (showModalParam === "true"){
+        setOpenModal(true);
+        setModalMessage("Your session has expired. Please log in again.")
+
+        searchParams.delete("showModal");
+        navigate({ search: searchParams.toString() });
+    }
+  }, [navigate, searchParams, showModalParam])
 
   const validate = () => {
     setPasswordError("");
