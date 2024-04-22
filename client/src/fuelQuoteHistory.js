@@ -20,7 +20,6 @@ export default function FuelQuoteHistory() {
     }, 1000);
   }, []);
 
-  useSessionExpirationChecker(() => {}, []);
 
   const fetchProfile = () => {
     fetch("http://localhost:3001/api/fuel-quote", {

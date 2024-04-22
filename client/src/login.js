@@ -15,20 +15,6 @@ export default function Login() {
   const [modalMessage, setModalMessage] = useState("");
 
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const searchParams = new URLSearchParams(location.search);
-  const showModalParam = searchParams.get("showModal");
-
-  useEffect(() => {
-    if (showModalParam === "true"){
-        setOpenModal(true);
-        setModalMessage("Your session has expired. Please log in again.")
-
-        searchParams.delete("showModal");
-        navigate({ search: searchParams.toString() });
-    }
-  }, [navigate, searchParams, showModalParam])
 
   const validate = () => {
     setPasswordError("");
