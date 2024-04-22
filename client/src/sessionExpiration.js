@@ -32,7 +32,7 @@ export const useSessionExpirationChecker = () => {
     const checkSessionExpiration = async () => {
       const currentTime = Date.now();
       const inactivityDuration = currentTime - lastInteraction;
-      const sessionTimeout = 1 * 60 * 1000; // 1 minutes in milliseconds
+      const sessionTimeout = 30 * 60 * 1000; // 1 minutes in milliseconds
 
       if (inactivityDuration >= sessionTimeout && isMounted) {
         console.log("Session Timed out!");
