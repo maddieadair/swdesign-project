@@ -303,7 +303,9 @@ export default function FuelQuoteForm() {
   };
 
   const editAddress = async () => {
+    setShowQuote(false)
     setEditAddy(true);
+    resetFields();
     setProfileValues((prevState) => ({
       ...prevState,
       address1: profile[0].Address1,
@@ -312,14 +314,6 @@ export default function FuelQuoteForm() {
       zipcode: profile[0].Zipcode,
     }));
   };
-
-  //console.log("delivery date", date);
-  //console.log("delivery date type", typeof date);
-  //console.log("delivery date length", date.length);
-  //console.log("gallons", gallons);
-  //console.log("gallons length", gallons.length);
-  //console.log("gallons type", typeof gallons);
-  //console.log(parseInt(gallons));
 
   const handleClose = () => {
     setOpenModal(false);
@@ -412,7 +406,7 @@ export default function FuelQuoteForm() {
               <div className="w-1/2 flex flex-col text-start gap-y-6">
                 {editAddy ? (
                   <form className="flex flex-col gap-y-12 text-start">
-                    <div className="flex flex-row gap-x-4 w-1/2">
+                    <div className="flex flex-row gap-x-4">
                       <div className="flex flex-col gap-y-2 w-[100%]">
                         <h5 className="font-bold">
                           Address <span className="text-red-400">*</span>
@@ -507,8 +501,8 @@ export default function FuelQuoteForm() {
                       </div>
                     </div>
 
-                    <div className="flex flex-row gap-x-4 w-1/2">
-                      <div className="flex flex-col gap-y-2">
+                    <div className="flex flex-row gap-x-4">
+                      <div className="flex flex-col gap-y-2 w-1/2">
                         <h5 className="font-bold">
                           City <span className="text-red-400">*</span>
                         </h5>
@@ -524,7 +518,7 @@ export default function FuelQuoteForm() {
                           <p className="text-red-400">{errors.city}</p>
                         ) : null}
                       </div>
-                      <div className="flex flex-col gap-y-2">
+                      <div className="flex flex-col gap-y-2 w-1/2">
                         <h5 className="font-bold">
                           Zipcode <span className="text-red-400">*</span>
                         </h5>{" "}
@@ -541,7 +535,7 @@ export default function FuelQuoteForm() {
                         ) : null}
                       </div>
                     </div>
-                    <div className="flex flex-row gap-x-2 w-1/2">
+                    <div className="flex flex-row gap-x-2">
                       <button
                         type="button"
                         onClick={handleCancel}
@@ -555,26 +549,30 @@ export default function FuelQuoteForm() {
                         onClick={handleUpdate}
                         className="w-1/2 font-bold bg-[#0b3721] rounded-md p-4 text-[#fafafa] hover:bg-[#3d7b52] transition-colors ease-in-out duration-500"
                       >
-                        Change
+                        Update
                       </button>
                     </div>
                   </form>
                 ) : (
                   <div className="border-b pb-6">
-                    <h1 className="font-bold text-lg">Delivery Address</h1>
-                    <p>{profile[0].Address1}</p>
-                    <p>{profile[0].Address2}</p>
-                    <p>
-                      {profile[0].City}, {profile[0].State} {profile[0].Zipcode}
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={editAddress}
-                      className="hover:text-[#0b3721] hover:underline hover:underline-offset-4 hover:underline-[#0b3721] transition-all ease-in-out duration-500"
-                    >
-                      <HiPencil size={20} />
-                    </button>
+                    <div className="flex flex-row justify-between">
+                      <h1 className="font-bold text-lg">Delivery Address</h1>
+                      <button
+                        type="button"
+                        onClick={editAddress}
+                        className="hover:text-[#0b3721] hover:underline hover:underline-offset-4 hover:underline-[#0b3721] transition-all ease-in-out duration-500"
+                      >
+                        <HiPencil size={20} />
+                      </button>
+                    </div>
+                    <div className="flex flex-col">
+                      <p>{profile[0].Address1}</p>
+                      <p>{profile[0].Address2}</p>
+                      <p>
+                        {profile[0].City}, {profile[0].State}{" "}
+                        {profile[0].Zipcode}
+                      </p>
+                    </div>
                   </div>
                 )}
                 {showQuote ? (
