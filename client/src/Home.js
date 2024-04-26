@@ -67,7 +67,7 @@ export default function Home() {
                   ?.scrollIntoView({ behavior: "smooth" })
               }
             >
-              About Us
+              About
             </p>
             <p
               className="hover:underline hover:underline-offset-8 transition-all duration-500 ease-in-out hover:cursor-pointer"
