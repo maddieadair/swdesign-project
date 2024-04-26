@@ -11,6 +11,7 @@ import { getPrice, getTotal } from "./fuelPriceModule.js";
 import { CiRedo } from "react-icons/ci";
 import Modal from "./modal.js";
 import { useSessionExpirationChecker } from "./sessionExpiration.js";
+import { HiPencil } from "react-icons/hi2";
 
 export default function FuelQuoteForm() {
   const [gallons, setGallons] = useState("");
@@ -29,13 +30,114 @@ export default function FuelQuoteForm() {
   const [openModal, setOpenModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
+  const [editAddy, setEditAddy] = useState(false);
+  const [profileValues, setProfileValues] = useState({
+    address1: "",
+    city: "",
+    state: "",
+    zipcode: "",
+  });
+
+  const handleProfileChange = (e) => {
+    setProfileValues((prevState) => ({
+      ...profileValues,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const validateAddress = () => {
+    console.log("PROFILE VALUES", profileValues);
+    setErrors({});
+    let errors = {};
+    var hasErrors = false;
+
+    if (profileValues.address1.length === 0) {
+      errors.address1 = "* Please enter a valid address.";
+      hasErrors = true;
+    } else if (profileValues.address1 > 100) {
+      errors.address1 = "* Address cannot exceed 100 characters.";
+      hasErrors = true;
+    }
+
+    if (profileValues.city.length === 0) {
+      errors.city = "* Please enter a valid city.";
+      hasErrors = true;
+    } else if (profileValues.city.length > 100) {
+      errors.city = "* City cannot exceed 100 characters.";
+      hasErrors = true;
+    }
+
+    if (profileValues.state.length === 0) {
+      errors.state = "* Please choose a state.";
+      hasErrors = true;
+    }
+
+    if (!isNaN(profileValues.zipcode)) {
+      if (profileValues.zipcode.length < 5) {
+        errors.zipcode =
+          "* Please enter a valid zipcode of at least 5 characters.";
+        hasErrors = true;
+      } else if (profileValues.zipcode.length > 9) {
+        errors.zipcode = "* Zipcode cannot exceed 9 characters.";
+        hasErrors = true;
+      }
+    } else {
+      errors.zipcode = "* Please enter a valid zipcode.";
+      hasErrors = true;
+    }
+
+    setErrors(errors);
+    console.log(errors);
+    console.log(profileValues);
+    console.log("hasErrrors:", hasErrors);
+
+    return hasErrors;
+  };
+
+  const handleCancel = () => {
+    console.log("IN cancel:", profile[0].Address2);
+    setEditAddy(false);
+    setProfileValues((prevState) => ({
+      ...prevState,
+      address1: "",
+      city: "",
+      state: "",
+      zipcode: "",
+    }));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    const hasErrors = validateAddress();
+
+    if (!hasErrors) {
+      console.log("No errors detected");
+      const updatedProfile = [...profile];
+      console.log("values:");
+      console.log(profileValues);
+
+      // Modify the copy with the updated values
+      updatedProfile[0].Address1 = profileValues.address1;
+      updatedProfile[0].City = profileValues.city;
+      updatedProfile[0].State = profileValues.state;
+      updatedProfile[0].Zipcode = profileValues.zipcode;
+
+      // Set the modified copy back to the state
+      setProfile(updatedProfile);
+      console.log("update profile");
+      console.log(profile);
+      setEditAddy(false);
+    } else {
+      console.log("Input is not valid");
+    }
+  };
+
   useEffect(() => {
     setTimeout(() => {
       fetchProfile();
     }, 1000);
   }, []);
-
-
 
   const fetchProfile = () => {
     fetch("http://localhost:3001/api/profile", {
@@ -50,13 +152,19 @@ export default function FuelQuoteForm() {
       })
       .then((data) => {
         setProfile(data);
+        console.log("profile info");
         console.log(data);
         setLoading(false);
+        if (Array.isArray(data) && data.length === 0) {
+          setModalMessage("Please create a profile");
+          setOpenModal(true);
+          setLoading(true);
+        }
       });
   };
 
   const checkHistory = async () => {
-    return (fetch("http://localhost:3001/api/check-history", {
+    return fetch("http://localhost:3001/api/check-history", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -70,10 +178,10 @@ export default function FuelQuoteForm() {
         console.log(data);
         // setHistory(data)
         return data;
-      }).catch((err) => {
-        console.log(err)
       })
-    )
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   const validate = () => {
@@ -98,16 +206,13 @@ export default function FuelQuoteForm() {
     return hasErrors;
   };
 
-  const getQuote = async() => {
+  const getQuote = async () => {
     let response = await checkHistory();
 
-    let hasHistory = response.length > 0 && response[0].hasHistory === 1 ? 1 : 0;
+    let hasHistory =
+      response.length > 0 && response[0].hasHistory === 1 ? 1 : 0;
 
-    const suggested = getPrice(
-      profile[0].State,
-      gallons,
-      hasHistory
-    );
+    const suggested = getPrice(profile[0].State, gallons, hasHistory);
     setSuggestedPrice(suggested);
 
     const total = getTotal(gallons, suggested);
@@ -176,14 +281,13 @@ export default function FuelQuoteForm() {
         const data = await response.json();
         console.log(data);
 
-
-        setModalMessage("Fuel Quote successfully added!")
+        setModalMessage("Fuel Quote successfully added!");
         setOpenModal(true);
 
         // alert("Fuel Quote successfully added!");
         resetFields();
       } catch (error) {
-        setModalMessage(error.message)
+        setModalMessage(error.message);
         setOpenModal(true);
         // alert(error);
         console.log("There was an error fetching:", error);
@@ -198,13 +302,24 @@ export default function FuelQuoteForm() {
     setGallons(value);
   };
 
-  console.log("delivery date", date);
-  console.log("delivery date type", typeof date);
-  console.log("delivery date length", date.length);
-  console.log("gallons", gallons);
-  console.log("gallons length", gallons.length);
-  console.log("gallons type", typeof gallons);
-  console.log(parseInt(gallons));
+  const editAddress = async () => {
+    setEditAddy(true);
+    setProfileValues((prevState) => ({
+      ...prevState,
+      address1: profile[0].Address1,
+      city: profile[0].City,
+      state: profile[0].State,
+      zipcode: profile[0].Zipcode,
+    }));
+  };
+
+  //console.log("delivery date", date);
+  //console.log("delivery date type", typeof date);
+  //console.log("delivery date length", date.length);
+  //console.log("gallons", gallons);
+  //console.log("gallons length", gallons.length);
+  //console.log("gallons type", typeof gallons);
+  //console.log(parseInt(gallons));
 
   const handleClose = () => {
     setOpenModal(false);
@@ -218,6 +333,7 @@ export default function FuelQuoteForm() {
             <p className="font-inter">{modalMessage}</p>
           </Modal>
           <Navbar />
+
           <div className="flex flex-col gap-y-16 font-inter px-16 py-24">
             <div className="text-start flex flex-col gap-y-12">
               <h1 className="font-alegreya text-7xl font-bold">
@@ -294,14 +410,173 @@ export default function FuelQuoteForm() {
               </div>
 
               <div className="w-1/2 flex flex-col text-start gap-y-6">
-                <div className="border-b pb-6">
-                  <h1 className="font-bold text-lg">Delivery Address</h1>
-                  <p>{profile[0].Address1}</p>
-                  <p>{profile[0].Address2}</p>
-                  <p>
-                    {profile[0].City}, {profile[0].State} {profile[0].Zipcode}
-                  </p>
-                </div>
+                {editAddy ? (
+                  <form className="flex flex-col gap-y-12 text-start">
+                    <div className="flex flex-row gap-x-4 w-1/2">
+                      <div className="flex flex-col gap-y-2 w-[100%]">
+                        <h5 className="font-bold">
+                          Address <span className="text-red-400">*</span>
+                        </h5>{" "}
+                        <input
+                          type="text"
+                          name="address1"
+                          value={profileValues.address1}
+                          onChange={handleProfileChange}
+                          placeholder="address line 1"
+                          className="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                        />
+                        {errors.address1 ? (
+                          <p className="text-red-400">{errors.address1}</p>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-col gap-y-2 w-[100px]">
+                        <h5 className="font-bold">
+                          State <span className="text-red-400">*</span>
+                        </h5>{" "}
+                        <select
+                          name="state"
+                          placeholder="state"
+                          value={profileValues.state}
+                          onChange={handleProfileChange}
+                          className="text-[#2f2f28] border bg-[#fafafa]  border-[#e2e2e0] p-4 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                        >
+                          <option
+                            value=""
+                            disabled
+                            hidden
+                            selected
+                            className=""
+                          >
+                            State
+                          </option>
+                          <option value="AL">AL</option>
+                          <option value="AK">AK</option>
+                          <option value="AR">AR</option>
+                          <option value="AZ">AZ</option>
+                          <option value="CA">CA</option>
+                          <option value="CO">CO</option>
+                          <option value="CT">CT</option>
+                          <option value="DC">DC</option>
+                          <option value="DE">DE</option>
+                          <option value="FL">FL</option>
+                          <option value="GA">GA</option>
+                          <option value="HI">HI</option>
+                          <option value="IA">IA</option>
+                          <option value="ID">ID</option>
+                          <option value="IL">IL</option>
+                          <option value="IN">IN</option>
+                          <option value="KS">KS</option>
+                          <option value="KY">KY</option>
+                          <option value="LA">LA</option>
+                          <option value="MA">MA</option>
+                          <option value="MD">MD</option>
+                          <option value="ME">ME</option>
+                          <option value="MI">MI</option>
+                          <option value="MN">MN</option>
+                          <option value="MO">MO</option>
+                          <option value="MS">MS</option>
+                          <option value="MT">MT</option>
+                          <option value="NC">NC</option>
+                          <option value="NE">NE</option>
+                          <option value="NH">NH</option>
+                          <option value="NJ">NJ</option>
+                          <option value="NM">NM</option>
+                          <option value="NV">NV</option>
+                          <option value="NY">NY</option>
+                          <option value="ND">ND</option>
+                          <option value="OH">OH</option>
+                          <option value="OK">OK</option>
+                          <option value="OR">OR</option>
+                          <option value="PA">PA</option>
+                          <option value="RI">RI</option>
+                          <option value="SC">SC</option>
+                          <option value="SD">SD</option>
+                          <option value="TN">TN</option>
+                          <option value="TX">TX</option>
+                          <option value="UT">UT</option>
+                          <option value="VT">VT</option>
+                          <option value="VA">VA</option>
+                          <option value="WA">WA</option>
+                          <option value="WI">WI</option>
+                          <option value="WV">WV</option>
+                          <option value="WY">WY</option>
+                        </select>
+                        {errors.state ? (
+                          <p className="text-red-400">{errors.state}</p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row gap-x-4 w-1/2">
+                      <div className="flex flex-col gap-y-2">
+                        <h5 className="font-bold">
+                          City <span className="text-red-400">*</span>
+                        </h5>
+                        <input
+                          type="text"
+                          name="city"
+                          placeholder="city"
+                          value={profileValues.city}
+                          onChange={handleProfileChange}
+                          className="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                        />
+                        {errors.city ? (
+                          <p className="text-red-400">{errors.city}</p>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-col gap-y-2">
+                        <h5 className="font-bold">
+                          Zipcode <span className="text-red-400">*</span>
+                        </h5>{" "}
+                        <input
+                          type="text"
+                          name="zipcode"
+                          value={profileValues.zipcode}
+                          onChange={handleProfileChange}
+                          placeholder="zipcode"
+                          className="text-[#2f2f28] border bg-[#fafafa] border-[#e2e2e0] p-4 w-full rounded-md focus:outline-none focus:border-[#0b3721] focus:border-2"
+                        />
+                        {errors.zipcode ? (
+                          <p className="text-red-400">{errors.zipcode}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="flex flex-row gap-x-2 w-1/2">
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="p-4 font-bold w-1/2 bg-[#953327] rounded-md text-[#fafafa] hover:bg-[#c3483c] transition-colors ease-in-out duration-500"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleUpdate}
+                        className="w-1/2 font-bold bg-[#0b3721] rounded-md p-4 text-[#fafafa] hover:bg-[#3d7b52] transition-colors ease-in-out duration-500"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="border-b pb-6">
+                    <h1 className="font-bold text-lg">Delivery Address</h1>
+                    <p>{profile[0].Address1}</p>
+                    <p>{profile[0].Address2}</p>
+                    <p>
+                      {profile[0].City}, {profile[0].State} {profile[0].Zipcode}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={editAddress}
+                      className="hover:text-[#0b3721] hover:underline hover:underline-offset-4 hover:underline-[#0b3721] transition-all ease-in-out duration-500"
+                    >
+                      <HiPencil size={20} />
+                    </button>
+                  </div>
+                )}
                 {showQuote ? (
                   <div className="flex flex-col gap-y-8">
                     <div className="flex flex-col gap-y-6">
@@ -332,7 +607,15 @@ export default function FuelQuoteForm() {
           </div>
         </div>
       ) : (
-        <Loading />
+        <>
+          {openModal && (
+            <Modal open={openModal} onClose={handleClose}>
+              <p className="font-inter">{modalMessage}</p>
+            </Modal>
+          )}
+          <Navbar />
+          <Loading />
+        </>
       )}
     </>
   );
