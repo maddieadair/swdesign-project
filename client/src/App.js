@@ -1,4 +1,7 @@
 import "./App.css";
+
+import Home from "./Home.js";
+
 import Login from "./login.js";
 import Signup from "./signup.js";
 
@@ -64,7 +67,8 @@ function App() {
             }
           ></Route> */}
 
-          <Route path="/" element={<Login />}></Route>
+          <Route path="/" element={<Home />}></Route>
+          <Route path="/login" element={<Login />}></Route>
           <Route path="/signup" element={<Signup />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/form" element={<FuelQuoteForm />}></Route>
