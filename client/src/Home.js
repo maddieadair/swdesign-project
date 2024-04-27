@@ -306,7 +306,7 @@ export default function Home() {
       </div>
 
       <div
-        className="p-32 flex flex-col text-start gap-y-16 border-t border-stone-200 bg-gradient-to-b from-[#fafafa] from-50% to-green-50"
+        className="p-32 flex flex-col text-start gap-y-16 border-t border-stone-200 bg-gradient-to-b from-white from-50% to-green-50"
         id="testimonials"
       >
         <h1 className="font-alegreya font-bold text-5xl">Testimonials</h1>
